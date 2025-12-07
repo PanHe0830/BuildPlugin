@@ -1,0 +1,22 @@
+# Binary files
+Binaries/
+DerivedDataCache/
+Intermediate/
+Saved/
+
+# Visual Studio / Xcode
+*.sln
+*.sdf
+*.suo
+*.opensdf
+*.VC.db
+*.VC.VC.opendb
+
+# Mac
+*.DS_Store
+
+# Unreal Engine auto-generated files
+*.xcodeproj
+*.xcworkspace
+*.idea/
+*.vscode/
