@@ -6,7 +6,7 @@
 class FBuildEdModeToolkit : public FModeToolkit
 {
 public:
-    virtual void Init(const TSharedPtr<IToolkitHost>& InitToolkitHost) override;
+    void Initialize(const TSharedPtr<IToolkitHost>& InitToolkitHost , const TSharedPtr<class FBuildTool>& BuildTool);
 
     //virtual FName GetToolkitFName() const override;
     virtual FText GetBaseToolkitName() const override;

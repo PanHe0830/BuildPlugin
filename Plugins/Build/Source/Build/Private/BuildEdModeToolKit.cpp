@@ -3,10 +3,11 @@
 #include "BuildEdMode.h"
 #include "EditorModeManager.h"
 #include "BuildToolkitWidget.h"
+#include "BuildTool.h"
 
-void FBuildEdModeToolkit::Init(const TSharedPtr<IToolkitHost>& InitToolkitHost)
+void FBuildEdModeToolkit::Initialize(const TSharedPtr<IToolkitHost>& InitToolkitHost,const TSharedPtr<FBuildTool>& BuildTool)
 {
-    ToolkitWidget = SNew(SBuildToolkitWidget); // 使用自定义 SCompoundWidget
+    ToolkitWidget = SNew(SBuildToolkitWidget).BuildTool(BuildTool); // 使用自定义 SCompoundWidget
     FModeToolkit::Init(InitToolkitHost);
     BuildUIWidget =
         SNew(SBox)

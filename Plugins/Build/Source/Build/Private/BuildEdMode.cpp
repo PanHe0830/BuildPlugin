@@ -1,23 +1,32 @@
-#include "BuildEdMode.h"
-#include "Engine/World.h"
-#include "EditorViewportClient.h"
-#include "Engine/Selection.h"
-#include "Editor.h"
-#include "GameFramework/Actor.h"
-#include "Engine/StaticMeshActor.h"
-#include "UObject/ConstructorHelpers.h"
-#include "Components/StaticMeshComponent.h"
-#include "DrawDebugHelpers.h"
-
+// My Create Class 
+#include "BuildTool.h"
 #include "BuildEdModeToolKit.h"
+#include "BuildEdMode.h"
+// My Create Class 
+// Engine Includes
+#include "Engine/World.h"
+#include "Engine/Selection.h"
+// Engine Includes
+// Unreal Includes
+#include "EditorViewportClient.h"
+#include "Editor.h"
 #include "EditorModeManager.h"
 #include "LevelEditor.h"
+// Unreal Includes
+// Other Includes
+#include "UObject/ConstructorHelpers.h"
+#include "Components/StaticMeshComponent.h"
+// Other Includes
+// Debug Includes
+#include "DrawDebugHelpers.h"
+// Debug Includes
 
 // 工具ID
 const FEditorModeID FBuildEdMode::EM_BuildEdModeId = TEXT("EM_BuildEdMode");
 
 FBuildEdMode::FBuildEdMode()
 {
+    
 }
 
 FBuildEdMode::~FBuildEdMode()
@@ -28,10 +37,12 @@ void FBuildEdMode::Enter()
 {
 	FEdMode::Enter();
 
+    BuildTool = MakeShareable(new FBuildTool());
+
     if (!Toolkit.IsValid())
     {
         Toolkit = MakeShareable(new FBuildEdModeToolkit);
-        Toolkit->Init(Owner->GetToolkitHost());
+        StaticCastSharedPtr<FBuildEdModeToolkit>(Toolkit)->Initialize(Owner->GetToolkitHost(), BuildTool);
     }
 }
 
@@ -42,6 +53,15 @@ void FBuildEdMode::Exit()
         Toolkit.Reset();
     }
 
+    if (BuildTool.IsValid())
+    {
+        BuildTool.Reset();
+    }
+
+    if (CachedView.IsValid())
+    {
+       CachedView.Reset();
+    }
 
     FEdMode::Exit();
 }
@@ -51,24 +71,31 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
     if (!InViewportClient)
         return false;
 
+    UWorld* World = InViewportClient->GetWorld();
+    if (!World)
+        return false;
+
     // 获取鼠标屏幕坐标
     FIntPoint MousePos = Click.GetClickPos();
 
-    // 创建 SceneViewFamily
-    FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(
-        InViewportClient->Viewport,
-        InViewportClient->GetWorld()->Scene,
-        InViewportClient->EngineShowFlags
-    ).SetRealtimeUpdate(true));
+    if (!CachedView.IsValid() || HasViewParametersChanged(InViewportClient))
+    {
+        FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(
+            InViewportClient->Viewport,
+            InViewportClient->GetWorld()->Scene,
+            InViewportClient->EngineShowFlags
+        ).SetRealtimeUpdate(true));
+        CachedView = MakeShareable(InViewportClient->CalcSceneView(&ViewFamily));
 
-    FSceneView* View = InViewportClient->CalcSceneView(&ViewFamily);
+        CachedCamLocation = InViewportClient->GetViewLocation();
+        CachedCamRotation = InViewportClient->GetViewRotation();
+        CachedViewportSize = InViewportClient->Viewport->GetSizeXY();
+    }
 
     // 屏幕坐标投射为世界射线
     FVector WorldOrigin, WorldDir;
-    View->DeprojectFVector2D(FVector2D(MousePos.X, MousePos.Y), WorldOrigin, WorldDir);
-
-    // 射线长度
-    const float TraceDistance = 100000.0f;
+    CachedView->DeprojectFVector2D(FVector2D(MousePos.X, MousePos.Y), WorldOrigin, WorldDir);
+    
     FVector End = WorldOrigin + WorldDir * TraceDistance;
 
     // 执行射线检测
@@ -84,33 +111,9 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
 
     if (bHit)
     {
-        UWorld* World = InViewportClient->GetWorld();
-        if (World)
+        if (Click.GetKey() == EKeys::LeftMouseButton)
         {
-            // Spawn StaticMeshActor
-            AStaticMeshActor* NewActor = World->SpawnActor<AStaticMeshActor>(
-                HitResult.Location,
-                FRotator::ZeroRotator
-            );
-
-            if (NewActor && NewActor->GetStaticMeshComponent())
-            {
-                // 使用 LoadObject 在非 UObject 构造函数中加载资源
-                UStaticMesh* CubeMesh = LoadObject<UStaticMesh>(
-                    nullptr,
-                    TEXT("/Engine/BasicShapes/Cube.Cube")
-                );
-
-                if (CubeMesh)
-                {
-                    NewActor->GetStaticMeshComponent()->SetStaticMesh(CubeMesh);
-                    NewActor->SetActorScale3D(FVector(1.0f));
-                    NewActor->GetStaticMeshComponent()->MarkRenderStateDirty();
-                }
-            }
-
-            // Debug Box
-            DrawDebugBox(World, HitResult.Location, FVector(50), FColor::Green, false, 2.0f);
+            BuildTool->OnClick(World, HitResult.Location);
         }
     }
 
@@ -120,5 +123,17 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
 void FBuildEdMode::Render(const FSceneView* View, FViewport* Viewport, FPrimitiveDrawInterface* PDI)
 {
     FEdMode::Render(View, Viewport, PDI);
-    // 可以在这里画辅助线或高亮选择的方块
+}
+
+bool FBuildEdMode::HasViewParametersChanged(FEditorViewportClient* InViewportClient) const
+{
+    if (!InViewportClient) return true;
+
+    const FVector CamLocation = InViewportClient->GetViewLocation();
+    const FRotator CamRotation = InViewportClient->GetViewRotation();
+    const FIntPoint ViewportSize = InViewportClient->Viewport->GetSizeXY();
+
+    return (CamLocation != CachedCamLocation ||
+        CamRotation != CachedCamRotation ||
+        ViewportSize != CachedViewportSize);
 }
