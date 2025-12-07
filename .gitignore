@@ -11,6 +11,8 @@ Saved/
 *.opensdf
 *.VC.db
 *.VC.VC.opendb
+.vs
+.vsconfig
 
 # Mac
 *.DS_Store
