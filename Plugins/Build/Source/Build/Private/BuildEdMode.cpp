@@ -1,4 +1,4 @@
-// My Create Class 
+ï»¿// My Create Class 
 #include "BuildTool.h"
 #include "BuildEdModeToolKit.h"
 #include "BuildEdMode.h"
@@ -21,7 +21,7 @@
 #include "DrawDebugHelpers.h"
 // Debug Includes
 
-// ¹¤¾ßID
+// å·¥å…·ID
 const FEditorModeID FBuildEdMode::EM_BuildEdModeId = TEXT("EM_BuildEdMode");
 
 FBuildEdMode::FBuildEdMode()
@@ -37,12 +37,21 @@ void FBuildEdMode::Enter()
 {
 	FEdMode::Enter();
 
-    BuildTool = MakeShareable(new FBuildTool());
+    BuildTool = MakeShared<FBuildTool>();;
 
     if (!Toolkit.IsValid())
     {
-        Toolkit = MakeShareable(new FBuildEdModeToolkit);
-        StaticCastSharedPtr<FBuildEdModeToolkit>(Toolkit)->Initialize(Owner->GetToolkitHost(), BuildTool);
+        Toolkit = MakeShared<FBuildEdModeToolkit>();
+        TSharedPtr<FBuildEdModeToolkit> BuildToolkit = StaticCastSharedPtr<FBuildEdModeToolkit>(Toolkit);
+        if (BuildToolkit.IsValid())
+        {
+            BuildToolkit->SetBuildEdMode(this);
+        }
+        else
+        {
+			UE_LOG(LogTemp, Error, TEXT("FBuildEdMode::Enter: Failed to cast Toolkit to FBuildEdModeToolkit"));
+        }
+        Toolkit->Init(Owner->GetToolkitHost());
     }
 }
 
@@ -75,7 +84,7 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
     if (!World)
         return false;
 
-    // »ñÈ¡Êó±êÆÁÄ»×ø±ê
+    // èŽ·å–é¼ æ ‡å±å¹•åæ ‡
     FIntPoint MousePos = Click.GetClickPos();
 
     if (!CachedView.IsValid() || HasViewParametersChanged(InViewportClient))
@@ -92,13 +101,13 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
         CachedViewportSize = InViewportClient->Viewport->GetSizeXY();
     }
 
-    // ÆÁÄ»×ø±êÍ¶ÉäÎªÊÀ½çÉäÏß
+    // å±å¹•åæ ‡æŠ•å°„ä¸ºä¸–ç•Œå°„çº¿
     FVector WorldOrigin, WorldDir;
     CachedView->DeprojectFVector2D(FVector2D(MousePos.X, MousePos.Y), WorldOrigin, WorldDir);
     
     FVector End = WorldOrigin + WorldDir * TraceDistance;
 
-    // Ö´ÐÐÉäÏß¼ì²â
+    // æ‰§è¡Œå°„çº¿æ£€æµ‹
     FHitResult HitResult;
     FCollisionQueryParams Params(SCENE_QUERY_STAT(BuildEdModeClick), true);
     bool bHit = InViewportClient->GetWorld()->LineTraceSingleByChannel(
@@ -117,12 +126,49 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
         }
     }
 
-    return true; // Ïû·Ñµã»÷ÊÂ¼þ
+    return true; // æ¶ˆè´¹ç‚¹å‡»äº‹ä»¶
 }
 
 void FBuildEdMode::Render(const FSceneView* View, FViewport* Viewport, FPrimitiveDrawInterface* PDI)
 {
     FEdMode::Render(View, Viewport, PDI);
+}
+
+void FBuildEdMode::SetCurrentEdMode(EBuildEditMode InMode)
+{
+    CurrentMode = InMode;
+    switch (InMode)
+    {
+    case EBuildEditMode::Add:
+        UE_LOG(LogTemp, Warning, TEXT("Current BuildEdMode Mode Add : %d"), static_cast<uint8>(CurrentMode));
+        break;
+    case EBuildEditMode::Remove:
+        UE_LOG(LogTemp, Warning, TEXT("Current BuildEdMode Mode Remove : %d"), static_cast<uint8>(CurrentMode));
+        break;
+    default:
+        UE_LOG(LogTemp, Warning, TEXT("Current BuildEdMode Mode default : %d"), static_cast<uint8>(CurrentMode));
+        break;
+    }
+}
+
+void FBuildEdMode::SetBuildAsset(UObject* InObject)
+{
+    if (!InObject)
+    {
+        SelectedBuildAsset.Reset();
+        return;
+    }
+
+    if (InObject->IsA<AActor>() ||
+        InObject->IsA<UBlueprint>() ||
+        InObject->IsA<UStaticMesh>())
+    {
+        OnBuildAssetChanged(InObject);
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Unsupported asset type: %s"), *InObject->GetName());
+    }
 }
 
 bool FBuildEdMode::HasViewParametersChanged(FEditorViewportClient* InViewportClient) const
@@ -136,4 +182,9 @@ bool FBuildEdMode::HasViewParametersChanged(FEditorViewportClient* InViewportCli
     return (CamLocation != CachedCamLocation ||
         CamRotation != CachedCamRotation ||
         ViewportSize != CachedViewportSize);
+}
+
+void FBuildEdMode::OnBuildAssetChanged(UObject* InObject)
+{
+    SelectedBuildAsset = InObject;
 }

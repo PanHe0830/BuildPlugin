@@ -5,6 +5,13 @@
 
 #define TRANCE_DISTANCE_LENGTH 100000.0f
 
+UENUM()
+enum class EBuildEditMode : uint8
+{
+    Add,
+    Remove
+};
+
 class FBuildEdMode : public FEdMode
 {
 public:
@@ -29,6 +36,12 @@ public:
     /** 工具ID */
     virtual bool UsesToolkits() const override { return true; }
 
+	// 设置编辑模式
+    void SetCurrentEdMode(EBuildEditMode InMode);
+
+	// 设置资源
+    void SetBuildAsset(UObject* InObject);
+
 private:
     // 判断视口是否发生变化
 	bool HasViewParametersChanged(FEditorViewportClient* InViewportClient) const;
@@ -36,6 +49,9 @@ private:
     FRotator CachedCamRotation;
     FIntPoint CachedViewportSize;
     // 判断视口是否发生变化
+
+	// 资源修改逻辑入口
+    void OnBuildAssetChanged(UObject* InObject);
 
 private:
     // 功能实现类的指针
@@ -45,4 +61,13 @@ private:
 
 	// 定义射线检测的最大距离
     const float TraceDistance = TRANCE_DISTANCE_LENGTH;
+
+	// 当前编辑模式
+	EBuildEditMode CurrentMode = EBuildEditMode::Add;
+
+	// 当前选择的资源
+    TWeakObjectPtr<UObject> SelectedBuildAsset;
+
+public:
+	FORCEINLINE EBuildEditMode GetCurrentMode() const { return CurrentMode; }
 };

@@ -5,9 +5,13 @@
 #include "BuildToolkitWidget.h"
 #include "BuildTool.h"
 
-void FBuildEdModeToolkit::Initialize(const TSharedPtr<IToolkitHost>& InitToolkitHost,const TSharedPtr<FBuildTool>& BuildTool)
-{
-    ToolkitWidget = SNew(SBuildToolkitWidget).BuildTool(BuildTool); // 使用自定义 SCompoundWidget
+void FBuildEdModeToolkit::Init(const TSharedPtr<IToolkitHost>& InitToolkitHost)
+{// 使用自定义 SCompoundWidget
+    ToolkitWidget = SNew(SBuildToolkitWidget)
+        .OnAddMode(this, &FBuildEdModeToolkit::OnAddModeSelected)
+        .OnDeleteMode(this, &FBuildEdModeToolkit::OnDeleteModeSelected)
+        .OnAssetChanged(this, &FBuildEdModeToolkit::OnBuildAssetChanged);
+
     FModeToolkit::Init(InitToolkitHost);
     BuildUIWidget =
         SNew(SBox)
@@ -18,10 +22,10 @@ void FBuildEdModeToolkit::Initialize(const TSharedPtr<IToolkitHost>& InitToolkit
         ];
 }
 
-//FName FBuildEdModeToolkit::GetToolkitFName() const
-//{
-//    return FName("BuildEdMode");
-//}
+void FBuildEdModeToolkit::SetBuildEdMode(FBuildEdMode* InBuildEdMode)
+{
+    BuildEdMode = InBuildEdMode;
+}
 
 FText FBuildEdModeToolkit::GetBaseToolkitName() const
 {
@@ -36,4 +40,43 @@ FEdMode* FBuildEdModeToolkit::GetEditorMode() const
 TSharedPtr<SWidget> FBuildEdModeToolkit::GetInlineContent() const
 {
     return BuildUIWidget;
+}
+
+UObject* FBuildEdModeToolkit::GetSelectedBuildAsset() const
+{
+    if (SelectedBuildAsset.IsValid())
+    {
+        return SelectedBuildAsset.Get();
+	}
+    return nullptr;
+}
+
+void FBuildEdModeToolkit::OnBuildAssetChanged(UObject* InObject)
+{
+    SelectedBuildAsset = InObject;
+
+    if (BuildEdMode != nullptr)
+    {
+        BuildEdMode->SetBuildAsset(InObject);
+    }
+}
+
+FReply FBuildEdModeToolkit::OnAddModeSelected()
+{
+    if (BuildEdMode != nullptr)
+    {
+        BuildEdMode->SetCurrentEdMode(EBuildEditMode::Add);
+    }
+
+    return FReply::Handled();
+}
+
+FReply FBuildEdModeToolkit::OnDeleteModeSelected()
+{
+    if (BuildEdMode != nullptr)
+    {
+        BuildEdMode->SetCurrentEdMode(EBuildEditMode::Remove);
+    }
+
+    return FReply::Handled();
 }

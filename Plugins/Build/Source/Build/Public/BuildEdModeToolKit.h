@@ -6,15 +6,29 @@
 class FBuildEdModeToolkit : public FModeToolkit
 {
 public:
-    void Initialize(const TSharedPtr<IToolkitHost>& InitToolkitHost , const TSharedPtr<class FBuildTool>& BuildTool);
+    virtual void Init(const TSharedPtr<IToolkitHost>& InitToolkitHost) override;
+    void SetBuildEdMode(FBuildEdMode* InBuildEdMode);
 
     //virtual FName GetToolkitFName() const override;
     virtual FText GetBaseToolkitName() const override;
     virtual FEdMode* GetEditorMode() const override;
     virtual TSharedPtr<SWidget> GetInlineContent() const override;
+    UObject* GetSelectedBuildAsset() const;
+
+private:
+	// UI界面按钮点击回调处理函数
+    void OnBuildAssetChanged(UObject* InObject);
+	// UI按钮点击添加处理函数
+    FReply OnAddModeSelected();
+	// UI按钮点击删除处理函数
+    FReply OnDeleteModeSelected();
     
 private:
     TSharedPtr<class SWidget> BuildUIWidget;
 
     TSharedPtr<SCompoundWidget> ToolkitWidget;
+
+    TWeakObjectPtr<UObject> SelectedBuildAsset;
+
+    FBuildEdMode* BuildEdMode;
 };
