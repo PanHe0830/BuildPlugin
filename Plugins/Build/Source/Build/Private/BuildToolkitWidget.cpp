@@ -17,22 +17,28 @@ void SBuildToolkitWidget::Construct(const FArguments& InArgs)
     ChildSlot
     [
         SNew(SVerticalBox)
+            // 模式按钮水平排列
+            + SVerticalBox::Slot().AutoHeight().Padding(5)
+            [
+                SNew(SHorizontalBox)
+                    + SHorizontalBox::Slot().AutoWidth().Padding(2.5)
+                    [
+                        SNew(SButton).Text(FText::FromString("Add Mode"))
+                            .OnClicked(this, &SBuildToolkitWidget::HandleAddClicked)
+                    ]
+                    + SHorizontalBox::Slot().AutoWidth().Padding(2.5)
+                    [
+                        SNew(SButton).Text(FText::FromString("Delete Mode"))
+                            .OnClicked(this, &SBuildToolkitWidget::HandleDeleteMode)
+                    ]
+            ]
+            // 资源选择
             + SVerticalBox::Slot().AutoHeight().Padding(5)
             [
                 SNew(SObjectPropertyEntryBox)
-                    .AllowedClass(UObject::StaticClass()) // 可以改成你想允许的类型
+                    .AllowedClass(UObject::StaticClass())
                     .AllowClear(true)
                     .OnObjectChanged(this, &SBuildToolkitWidget::HandleAssetSelected)
-            ]
-            + SVerticalBox::Slot().AutoHeight().Padding(2)
-            [
-                SNew(SButton).Text(FText::FromString("Delete Mode"))
-                    .OnClicked(this,&SBuildToolkitWidget::HandleDeleteMode)
-			] 
-            + SVerticalBox::Slot().AutoHeight().Padding(2)
-            [
-                SNew(SButton).Text(FText::FromString("Add Mode"))
-                    .OnClicked(this, &SBuildToolkitWidget::HandleAddClicked)
             ]
     ];
 }
