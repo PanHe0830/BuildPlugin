@@ -8,24 +8,13 @@ public class Build : ModuleRules
 	{
 		PCHUsage = ModuleRules.PCHUsageMode.UseExplicitOrSharedPCHs;
 		
-		PublicIncludePaths.AddRange(
-			new string[] {
-				// ... add public include paths required here ...
-			}
-			);
-				
-		
-		PrivateIncludePaths.AddRange(
-			new string[] {
-				// ... add other private include paths required here ...
-			}
-			);
-			
-		
 		PublicDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
+                "Core",
+				"CoreUObject",
+				"Engine",
+				"InputCore"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
@@ -34,12 +23,8 @@ public class Build : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
-				"Core",
-                "CoreUObject",
-				"Engine",
 				"Slate",
 				"SlateCore",
-                "InputCore",
                 "EditorSubsystem",
                 "EditorFramework",
                 "EditorStyle",

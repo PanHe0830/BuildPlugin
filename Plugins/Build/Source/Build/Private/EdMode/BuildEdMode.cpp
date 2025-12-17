@@ -1,7 +1,7 @@
 ﻿// My Create Class 
 #include "BuildTool.h"
-#include "BuildEdModeToolKit.h"
-#include "BuildEdMode.h"
+#include "ToolKit/BuildEdModeToolKit.h"
+#include "EdMode/BuildEdMode.h"
 // My Create Class 
 // Engine Includes
 #include "Engine/World.h"

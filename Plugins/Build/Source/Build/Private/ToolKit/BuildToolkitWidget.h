@@ -1,10 +1,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Types/BuildDelegates.h"
 #include "Widgets/SCompoundWidget.h"
-
-// 资源选择更改委托
-DECLARE_DELEGATE_OneParam(FOnBuildAssetChanged, UObject*);
 
 class SBuildToolkitWidget : public SCompoundWidget
 {

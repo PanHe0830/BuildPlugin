@@ -1,6 +1,6 @@
-#include "BuildEdModeToolKit.h"
+#include "ToolKit/BuildEdModeToolKit.h"
 
-#include "BuildEdMode.h"
+#include "EdMode/BuildEdMode.h"
 #include "EditorModeManager.h"
 #include "BuildToolkitWidget.h"
 #include "BuildTool.h"

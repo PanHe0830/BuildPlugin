@@ -1,16 +1,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Types/BuildModeTypes.h"
 #include "EdMode.h"
 
 #define TRANCE_DISTANCE_LENGTH 100000.0f
-
-UENUM()
-enum class EBuildEditMode : uint8
-{
-    Add,
-    Remove
-};
 
 class FBuildEdMode : public FEdMode
 {

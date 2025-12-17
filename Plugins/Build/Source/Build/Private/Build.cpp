@@ -1,5 +1,5 @@
 #include "Build.h"
-#include "BuildEdMode.h"
+#include "EdMode/BuildEdMode.h"
 #include "EditorModeRegistry.h"
 #include "LevelEditor.h"
 #include "ToolMenus.h"
