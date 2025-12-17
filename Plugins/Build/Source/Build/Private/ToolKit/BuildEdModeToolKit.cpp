@@ -6,10 +6,10 @@
 #include "BuildTool.h"
 
 void FBuildEdModeToolkit::Init(const TSharedPtr<IToolkitHost>& InitToolkitHost)
-{// 使用自定义 SCompoundWidget
+{
+    // 使用自定义 SCompoundWidget
     ToolkitWidget = SNew(SBuildToolkitWidget)
-        .OnAddMode(this, &FBuildEdModeToolkit::OnAddModeSelected)
-        .OnDeleteMode(this, &FBuildEdModeToolkit::OnDeleteModeSelected)
+        .OnBuildModeChange(this, &FBuildEdModeToolkit::OnBuildModeChange)
         .OnAssetChanged(this, &FBuildEdModeToolkit::OnBuildAssetChanged);
 
     FModeToolkit::Init(InitToolkitHost);
@@ -61,22 +61,10 @@ void FBuildEdModeToolkit::OnBuildAssetChanged(UObject* InObject)
     }
 }
 
-FReply FBuildEdModeToolkit::OnAddModeSelected()
+void FBuildEdModeToolkit::OnBuildModeChange(EBuildEditMode BuildMode)
 {
     if (BuildEdMode != nullptr)
     {
-        BuildEdMode->SetCurrentEdMode(EBuildEditMode::Add);
+        BuildEdMode->SetCurrentEdMode(BuildMode);
     }
-
-    return FReply::Handled();
-}
-
-FReply FBuildEdModeToolkit::OnDeleteModeSelected()
-{
-    if (BuildEdMode != nullptr)
-    {
-        BuildEdMode->SetCurrentEdMode(EBuildEditMode::Remove);
-    }
-
-    return FReply::Handled();
 }

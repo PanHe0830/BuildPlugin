@@ -1,67 +1,32 @@
 #include "BuildToolkitWidget.h"
-
-// Slate控件头文件
-#include "Widgets/Input/SNumericEntryBox.h"
-#include "Widgets/Text/STextBlock.h"
-#include "Widgets/Input/SButton.h"
-#include "Widgets/SBoxPanel.h"
-#include "PropertyCustomizationHelpers.h"
-// Slate控件头文件
+#include "UI/BuildAssetUIWidget.h"
+#include "UI/BuildModeUIWidget.h"
 
 void SBuildToolkitWidget::Construct(const FArguments& InArgs)
 {
-    OnAddMode = InArgs._OnAddMode;
-    OnDeleteMode = InArgs._OnDeleteMode;
+    OnBuildModeChange = InArgs._OnBuildModeChange;
     OnAssetChanged = InArgs._OnAssetChanged;
 
     ChildSlot
     [
         SNew(SVerticalBox)
             // 模式按钮水平排列
-            + SVerticalBox::Slot().AutoHeight().Padding(5)
+            + SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(4)
             [
-                SNew(SHorizontalBox)
-                    + SHorizontalBox::Slot().AutoWidth().Padding(2.5)
-                    [
-                        SNew(SButton).Text(FText::FromString("Add Mode"))
-                            .OnClicked(this, &SBuildToolkitWidget::HandleAddClicked)
-                    ]
-                    + SHorizontalBox::Slot().AutoWidth().Padding(2.5)
-                    [
-                        SNew(SButton).Text(FText::FromString("Delete Mode"))
-                            .OnClicked(this, &SBuildToolkitWidget::HandleDeleteMode)
-                    ]
+                SNew(SBuildModeUIWidget)
+                    .BuildModeChange(OnBuildModeChange)
+                    // 如果你以后加 CurrentMode，可在这里传
             ]
-            // 资源选择
-            + SVerticalBox::Slot().AutoHeight().Padding(5)
+
+            // 资源选择 UI
+            + SVerticalBox::Slot()
+            .AutoHeight()
+            .Padding(4)
             [
-                SNew(SObjectPropertyEntryBox)
-                    .AllowedClass(UObject::StaticClass())
-                    .AllowClear(true)
-                    .OnObjectChanged(this, &SBuildToolkitWidget::HandleAssetSelected)
+                SNew(SBuildAssetWidget)
+                    .BuildAssetChange(OnAssetChanged)
             ]
     ];
-}
-
-void SBuildToolkitWidget::HandleAssetSelected(const FAssetData& AssetData)
-{
-    UObject* SelectedObject = AssetData.GetAsset();
-    if (OnAssetChanged.IsBound())
-    {
-        OnAssetChanged.Execute(SelectedObject);
-    }
-}
-
-FReply SBuildToolkitWidget::HandleAddClicked()
-{
-    return OnAddMode.IsBound()
-        ? OnAddMode.Execute()
-        : FReply::Handled();
-}
-
-FReply SBuildToolkitWidget::HandleDeleteMode()
-{
-    return OnDeleteMode.IsBound()
-        ? OnDeleteMode.Execute()
-        : FReply::Handled();
 }

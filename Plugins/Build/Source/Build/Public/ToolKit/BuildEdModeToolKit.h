@@ -18,10 +18,8 @@ public:
 private:
 	// UI界面按钮点击回调处理函数
     void OnBuildAssetChanged(UObject* InObject);
-	// UI按钮点击添加处理函数
-    FReply OnAddModeSelected();
-	// UI按钮点击删除处理函数
-    FReply OnDeleteModeSelected();
+	// 模式切换回调处理函数
+    void OnBuildModeChange(EBuildEditMode BuildMode);
     
 private:
     TSharedPtr<class SWidget> BuildUIWidget;
