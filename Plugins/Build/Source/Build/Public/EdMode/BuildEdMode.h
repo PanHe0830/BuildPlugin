@@ -6,14 +6,6 @@
 
 #define TRANCE_DISTANCE_LENGTH 100000.0f
 
-struct FViewportCache
-{
-    TSharedPtr<FSceneView> SceneView;
-    FVector CamLocation;
-    FRotator CamRotation;
-    FIntPoint ViewportSize;
-};
-
 class FBuildEdMode : public FEdMode
 {
 public:
@@ -45,23 +37,12 @@ public:
     void SetBuildAsset(UObject* InObject);
 
 private:
-    // 判断视口是否发生变化
-	bool HasViewParametersChanged(FEditorViewportClient* InViewportClient) const;
-    FVector CachedCamLocation;
-    FRotator CachedCamRotation;
-    FIntPoint CachedViewportSize;
-    // 判断视口是否发生变化
-
 	// 资源修改逻辑入口
     void OnBuildAssetChanged(UObject* InObject);
-
-	void UpdateViewportCache(FEditorViewportClient* InViewportClient);
 
 private:
     // 功能实现类的指针
     TSharedPtr<class FBuildTool> BuildTool;
-
-    TSharedPtr<FSceneView> CachedView;
 
 	// 定义射线检测的最大距离
     const float TraceDistance = TRANCE_DISTANCE_LENGTH;
@@ -71,9 +52,6 @@ private:
 
 	// 当前选择的资源
     TWeakObjectPtr<UObject> SelectedBuildAsset;
-
-	// 视口缓存列表
-	TMap<FEditorViewportClient* , FViewportCache> ViewportCacheMap;
 
 public:
 	FORCEINLINE EBuildEditMode GetCurrentMode() const { return CurrentMode; }

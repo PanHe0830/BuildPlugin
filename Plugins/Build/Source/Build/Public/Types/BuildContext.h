@@ -8,16 +8,8 @@
 
 struct FBuildClickedContext
 {
-
     UWorld* World;
-
     FHitResult HitResult;
-
     FKey Key;
-
-    bool bCtrlDown;
-
-    bool bShiftDown;
-
-    bool bAltDown;
+    bool bHit;
 };

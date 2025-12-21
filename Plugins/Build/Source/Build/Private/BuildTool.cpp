@@ -7,10 +7,7 @@
 
 FBuildTool::FBuildTool()
 {
-    ProduceStaticMesh = LoadObject<UStaticMesh>(
-        nullptr,
-        TEXT("/Engine/BasicShapes/Cube.Cube")
-    );
+    
 }
 
 FBuildTool::~FBuildTool()
@@ -19,7 +16,7 @@ FBuildTool::~FBuildTool()
 
 void FBuildTool::OnClick(const struct FBuildClickedContext& context)
 {
-    if (context.Key == EKeys::LeftMouseButton)
+    if (context.Key == EKeys::LeftMouseButton and context.bHit)
     {
 		CreateMeshAtLocation(context.World, context.HitResult.Location);
     }
