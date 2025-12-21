@@ -17,7 +17,6 @@ void SBuildAssetWidget::Construct(const FArguments& InArgs)
                         .OnObjectChanged(this, &SBuildAssetWidget::HandleAssetSelected)
                 ]
         ];
-    
 }
 
 void SBuildAssetWidget::HandleAssetSelected(const FAssetData& AssetData)

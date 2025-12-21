@@ -2,6 +2,7 @@
 #include "BuildTool.h"
 #include "ToolKit/BuildEdModeToolKit.h"
 #include "EdMode/BuildEdMode.h"
+#include "Types/BuildContext.h"
 // My Create Class 
 // Engine Includes
 #include "Engine/World.h"
@@ -23,6 +24,8 @@
 
 // 工具ID
 const FEditorModeID FBuildEdMode::EM_BuildEdModeId = TEXT("EM_BuildEdMode");
+
+PRAGMA_DISABLE_OPTIMIZATION
 
 FBuildEdMode::FBuildEdMode()
 {
@@ -87,6 +90,11 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
     // 获取鼠标屏幕坐标
     FIntPoint MousePos = Click.GetClickPos();
 
+    if (!InViewportClient->IsPerspective()) // 判断是不是预览模式
+    {
+
+    }
+
     if (!CachedView.IsValid() || HasViewParametersChanged(InViewportClient))
     {
         FSceneViewFamilyContext ViewFamily(FSceneViewFamily::ConstructionValues(
@@ -95,7 +103,7 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
             InViewportClient->EngineShowFlags
         ).SetRealtimeUpdate(true));
         CachedView = MakeShareable(InViewportClient->CalcSceneView(&ViewFamily));
-
+    
         CachedCamLocation = InViewportClient->GetViewLocation();
         CachedCamRotation = InViewportClient->GetViewRotation();
         CachedViewportSize = InViewportClient->Viewport->GetSizeXY();
@@ -118,13 +126,12 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
         Params
     );
 
-    if (bHit)
-    {
-        if (Click.GetKey() == EKeys::LeftMouseButton)
-        {
-            BuildTool->OnClick(World, HitResult.Location);
-        }
-    }
+    FBuildClickedContext clickedContext;
+    clickedContext.World = World;
+    clickedContext.Key = Click.GetKey();
+	clickedContext.HitResult = HitResult;
+
+    BuildTool->OnClick(clickedContext);
 
     return true; // 消费点击事件
 }
@@ -188,3 +195,10 @@ void FBuildEdMode::OnBuildAssetChanged(UObject* InObject)
 {
     SelectedBuildAsset = InObject;
 }
+
+void FBuildEdMode::UpdateViewportCache(FEditorViewportClient* InViewportClient)
+{
+    
+}
+
+PRAGMA_ENABLE_OPTIMIZATION

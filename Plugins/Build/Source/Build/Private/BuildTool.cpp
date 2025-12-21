@@ -1,8 +1,9 @@
 #include "BuildTool.h"
+#include "Types/BuildContext.h"
 
 #include "DrawDebugHelpers.h"
-
 #include "Engine/StaticMeshActor.h"
+
 
 FBuildTool::FBuildTool()
 {
@@ -16,11 +17,12 @@ FBuildTool::~FBuildTool()
 {
 }
 
-void FBuildTool::OnClick(UWorld* ViewPortClientWorld, const FVector& ClickLocation)
+void FBuildTool::OnClick(const struct FBuildClickedContext& context)
 {
-	if (!ViewPortClientWorld)
-		return;
-	CreateMeshAtLocation(ViewPortClientWorld,ClickLocation);
+    if (context.Key == EKeys::LeftMouseButton)
+    {
+		CreateMeshAtLocation(context.World, context.HitResult.Location);
+    }
 }
 
 void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FVector& Location)

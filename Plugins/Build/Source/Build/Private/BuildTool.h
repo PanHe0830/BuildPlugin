@@ -2,13 +2,15 @@
 
 #include "CoreMinimal.h"
 
+struct FBuildClickedContext;
+
 class FBuildTool
 {
 public:
 	FBuildTool();
 	~FBuildTool();
 
-	void OnClick(UWorld* ViewPortClientWorld, const FVector& ClickLocation);
+	void OnClick(const FBuildClickedContext& context);
 
 	// 设置生成物体的网格资源
 	void SetProduceStaticMesh(class UStaticMesh* InStaticMesh) { ProduceStaticMesh = InStaticMesh; }

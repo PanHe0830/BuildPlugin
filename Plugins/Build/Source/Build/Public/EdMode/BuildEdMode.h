@@ -6,6 +6,14 @@
 
 #define TRANCE_DISTANCE_LENGTH 100000.0f
 
+struct FViewportCache
+{
+    TSharedPtr<FSceneView> SceneView;
+    FVector CamLocation;
+    FRotator CamRotation;
+    FIntPoint ViewportSize;
+};
+
 class FBuildEdMode : public FEdMode
 {
 public:
@@ -47,6 +55,8 @@ private:
 	// 资源修改逻辑入口
     void OnBuildAssetChanged(UObject* InObject);
 
+	void UpdateViewportCache(FEditorViewportClient* InViewportClient);
+
 private:
     // 功能实现类的指针
     TSharedPtr<class FBuildTool> BuildTool;
@@ -61,6 +71,9 @@ private:
 
 	// 当前选择的资源
     TWeakObjectPtr<UObject> SelectedBuildAsset;
+
+	// 视口缓存列表
+	TMap<FEditorViewportClient* , FViewportCache> ViewportCacheMap;
 
 public:
 	FORCEINLINE EBuildEditMode GetCurrentMode() const { return CurrentMode; }
