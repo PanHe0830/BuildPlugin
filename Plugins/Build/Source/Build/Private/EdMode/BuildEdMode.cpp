@@ -1,7 +1,6 @@
 ﻿#include "BuildTool.h"
 #include "ToolKit/BuildEdModeToolKit.h"
 #include "EdMode/BuildEdMode.h"
-#include "Types/BuildContext.h"
 
 #include "Engine/World.h"
 #include "Engine/Selection.h"
@@ -94,6 +93,8 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
     clickedContext.Key = Click.GetKey();
 	clickedContext.HitResult = HitResult;
     clickedContext.bHit = bHit;
+	clickedContext.AssetType = Type;
+	clickedContext.BuildAsset = SelectedBuildAsset.Get();
 
     BuildTool->OnClick(clickedContext);
 
@@ -124,8 +125,10 @@ void FBuildEdMode::SetCurrentEdMode(EBuildEditMode InMode)
 
 void FBuildEdMode::SetBuildAsset(UObject* InObject)
 {
+	UE_LOG(LogTemp, Warning, TEXT("SetBuildAsset: %s"), InObject ? *InObject->GetName() : TEXT("None"));
     if (!InObject)
     {
+		UE_LOG(LogTemp, Warning, TEXT("Clearing selected build asset."));
         SelectedBuildAsset.Reset();
         return;
     }
@@ -145,4 +148,21 @@ void FBuildEdMode::SetBuildAsset(UObject* InObject)
 void FBuildEdMode::OnBuildAssetChanged(UObject* InObject)
 {
     SelectedBuildAsset = InObject;
+    if ( Cast<AActor>(InObject) )
+    {
+        Type = EBuildAssetType::Actor;
+    }
+    else if ( Cast<UBlueprint>(InObject) )
+    {
+        Type = EBuildAssetType::BluePrint;
+    }
+    else if ( Cast<UStaticMesh>(InObject) )
+    {
+        Type = EBuildAssetType::StaticMesh;
+    }
+    else
+    {
+        Type = EBuildAssetType::None;
+	}
+	UE_LOG(LogTemp, Warning, TEXT("Selected build asset changed to: %s, Type: %d"), *InObject->GetName(), static_cast<uint8>(Type));
 }

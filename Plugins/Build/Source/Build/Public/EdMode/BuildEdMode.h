@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Types/BuildModeTypes.h"
+#include "Types/BuildContext.h"
 #include "EdMode.h"
 
 #define TRANCE_DISTANCE_LENGTH 100000.0f
@@ -52,6 +53,7 @@ private:
 
 	// 当前选择的资源
     TWeakObjectPtr<UObject> SelectedBuildAsset;
+	EBuildAssetType Type = EBuildAssetType::None;
 
 public:
 	FORCEINLINE EBuildEditMode GetCurrentMode() const { return CurrentMode; }

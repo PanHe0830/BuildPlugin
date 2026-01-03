@@ -13,7 +13,6 @@ public:
     virtual FText GetBaseToolkitName() const override;
     virtual FEdMode* GetEditorMode() const override;
     virtual TSharedPtr<SWidget> GetInlineContent() const override;
-    UObject* GetSelectedBuildAsset() const;
 
 private:
 	// UI界面按钮点击回调处理函数
@@ -25,8 +24,6 @@ private:
     TSharedPtr<class SWidget> BuildUIWidget;
 
     TSharedPtr<SCompoundWidget> ToolkitWidget;
-
-    TWeakObjectPtr<UObject> SelectedBuildAsset;
 
     FBuildEdMode* BuildEdMode;
 };

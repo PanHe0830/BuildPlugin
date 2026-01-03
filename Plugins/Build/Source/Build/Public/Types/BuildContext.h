@@ -6,10 +6,22 @@
 #include "InputCoreTypes.h"     // FKey
 #include "BuildModeTypes.h"     // EBuildEditMode
 
+UENUM()
+enum class EBuildAssetType : uint8
+{
+    Actor,
+	StaticMesh,
+	BluePrint,
+
+	None UMETA(Hidden)
+};
+
 struct FBuildClickedContext
 {
     UWorld* World;
     FHitResult HitResult;
     FKey Key;
     bool bHit;
+    TWeakObjectPtr<UObject> BuildAsset;
+	EBuildAssetType AssetType = EBuildAssetType::None;
 };

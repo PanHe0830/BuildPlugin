@@ -42,19 +42,8 @@ TSharedPtr<SWidget> FBuildEdModeToolkit::GetInlineContent() const
     return BuildUIWidget;
 }
 
-UObject* FBuildEdModeToolkit::GetSelectedBuildAsset() const
-{
-    if (SelectedBuildAsset.IsValid())
-    {
-        return SelectedBuildAsset.Get();
-	}
-    return nullptr;
-}
-
 void FBuildEdModeToolkit::OnBuildAssetChanged(UObject* InObject)
 {
-    SelectedBuildAsset = InObject;
-
     if (BuildEdMode != nullptr)
     {
         BuildEdMode->SetBuildAsset(InObject);
