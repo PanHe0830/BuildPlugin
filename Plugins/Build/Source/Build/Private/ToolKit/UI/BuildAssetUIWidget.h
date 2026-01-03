@@ -15,6 +15,12 @@ public:
 
 private:
     void HandleAssetSelected(const FAssetData& AssetData);
+    FString GetSelectAssetPath() const;
 private:
     FOnBuildAssetChanged BuildAssetChange;
+	TWeakObjectPtr<UObject> SelectedDisplayAsset;
+
+	TSharedPtr<FAssetThumbnail> AssetThumbnail;
+	TSharedPtr<FAssetThumbnailPool> ThumbnailPool;
+    TSharedPtr<SBox> ThumbnailBox;
 };
