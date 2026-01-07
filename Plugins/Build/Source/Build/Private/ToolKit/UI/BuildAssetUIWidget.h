@@ -14,8 +14,13 @@ public:
     void Construct(const FArguments& InArgs);
 
 private:
+	TSharedRef<SWidget> CreateThumbnailWidget();
+    TSharedRef<SWidget> CreateAssetPickerWidget();
+	TSharedRef<SWidget> CreateAssetTextWidget();
+private:
     void HandleAssetSelected(const FAssetData& AssetData);
     FString GetSelectAssetPath() const;
+	FText GetAssetText() const;
 private:
     FOnBuildAssetChanged BuildAssetChange;
 	TWeakObjectPtr<UObject> SelectedDisplayAsset;

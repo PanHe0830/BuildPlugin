@@ -7,8 +7,6 @@
 #include "IContentBrowserSingleton.h"
 #include "ContentBrowserModule.h"
 
-PRAGMA_DISABLE_OPTIMIZATION
-
 void SBuildAssetWidget::Construct(const FArguments& InArgs)
 {
     BuildAssetChange = InArgs._BuildAssetChange;
@@ -24,31 +22,56 @@ void SBuildAssetWidget::Construct(const FArguments& InArgs)
                 [
                     SNew(SHorizontalBox)
 
+                    // ×ó²à±êÌâ
+                    + SHorizontalBox::Slot()
+                        .AutoWidth()
+                        .VAlign(VAlign_Center)
+                        .Padding(5)
+                        [
+                            CreateAssetTextWidget()
+						]
+
                     // ×ó²àËõÂÔÍ¼
                     + SHorizontalBox::Slot()
                         .AutoWidth()
                         .Padding(5)
                         [
-                            SAssignNew(ThumbnailBox, SBox)
-                                .WidthOverride(64)
-                                .HeightOverride(64)
-                                [
-                                    AssetThumbnail->MakeThumbnailWidget()
-                                ]
+                            CreateThumbnailWidget()
                         ]
 
                     // ÓÒ²à×ÊÔ´Ñ¡Ôñ¿ò
                     + SHorizontalBox::Slot()
                         .FillWidth(1.f)
                         [
-                            SNew(SObjectPropertyEntryBox)
-                                .AllowedClass(UObject::StaticClass())
-                                .AllowClear(true)
-                                .OnObjectChanged(this, &SBuildAssetWidget::HandleAssetSelected)
-                                .ObjectPath(this, &SBuildAssetWidget::GetSelectAssetPath)
+                            CreateAssetPickerWidget()
                         ]
                 ]
         ];
+}
+
+TSharedRef<SWidget> SBuildAssetWidget::CreateThumbnailWidget()
+{
+    return SAssignNew(ThumbnailBox, SBox)
+        .WidthOverride(64)
+        .HeightOverride(64)
+        [
+            AssetThumbnail->MakeThumbnailWidget()
+        ];
+}
+
+TSharedRef<SWidget> SBuildAssetWidget::CreateAssetPickerWidget()
+{
+    return SNew(SObjectPropertyEntryBox)
+        .AllowedClass(UObject::StaticClass())
+        .AllowClear(true)
+        .OnObjectChanged(this, &SBuildAssetWidget::HandleAssetSelected)
+        .ObjectPath(this, &SBuildAssetWidget::GetSelectAssetPath);
+}
+
+TSharedRef<SWidget> SBuildAssetWidget::CreateAssetTextWidget()
+{
+    return SNew(STextBlock)
+        .Text(this, &SBuildAssetWidget::GetAssetText);
 }
 
 void SBuildAssetWidget::HandleAssetSelected(const FAssetData& AssetData)
@@ -81,4 +104,9 @@ FString SBuildAssetWidget::GetSelectAssetPath() const
         SelectedDisplayAsset->GetPathName() : FString("None Asset");
 }
 
-PRAGMA_ENABLE_OPTIMIZATION
+FText SBuildAssetWidget::GetAssetText() const
+{
+    return SelectedDisplayAsset.IsValid()
+        ? FText::FromString(SelectedDisplayAsset->GetName())
+        : FText::FromString(TEXT("None"));
+}
