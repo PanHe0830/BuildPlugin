@@ -22,6 +22,9 @@ private:
 	// 在指定位置创建网格体
 	void CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FVector& Location, UObject* BuildAsset, EBuildAssetType type);
 
+	// 删除指定位置的物体
+	void DeleteMeshAtLocation(AActor* DeleActor);
+
 private:
 	// 生成物体的网格资源
 	//UPROPERTY(Transient) //Transient 作用是不被序列化

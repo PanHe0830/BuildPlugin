@@ -3,6 +3,8 @@
 #include "DrawDebugHelpers.h"
 #include "Engine/StaticMeshActor.h"
 
+#include "Editor.h"
+#include "Subsystems/EditorActorSubsystem.h"
 
 FBuildTool::FBuildTool()
 {
@@ -15,9 +17,23 @@ FBuildTool::~FBuildTool()
 
 void FBuildTool::OnClick(const struct FBuildClickedContext& context)
 {
-    if (context.Key == EKeys::LeftMouseButton and context.bHit)
+    switch (context.BuildMode)
     {
-		CreateMeshAtLocation(context.World, context.HitResult.Location,context.BuildAsset.Get(),context.AssetType);
+        case EBuildEditMode::Add:
+            if (context.Key == EKeys::LeftMouseButton and context.bHit)
+            {
+                CreateMeshAtLocation(context.World, context.HitResult.Location, context.BuildAsset.Get(), context.AssetType);
+            }
+			break;
+		case EBuildEditMode::Remove:
+            if (context.Key == EKeys::LeftMouseButton and context.bHit)
+            {
+                DeleteMeshAtLocation(context.HitResult.GetActor());
+            }
+            break;
+        default:
+            UE_LOG(LogTemp, Warning, TEXT("Current Mode is not exist is this BuildTool"));
+            break;
     }
 }
 
@@ -53,6 +69,11 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FVector
             UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation BuildAsset is not UStaticMesh"));
             return;
         }
+
+        const FScopedTransaction Transaction(
+            NSLOCTEXT("BuildTool", "CreateActor", "Create Actor")
+        );
+
         FActorSpawnParameters SpawnParams;
         SpawnParams.SpawnCollisionHandlingOverride =
             ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -71,6 +92,9 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FVector
             return;
         }
 
+        MeshActor->SetFlags(RF_Transactional);
+        MeshActor->Modify();
+
         // 设置 Mesh
         UStaticMeshComponent* MeshComp = MeshActor->GetStaticMeshComponent();
         if (MeshComp)
@@ -78,6 +102,7 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FVector
             MeshComp->SetStaticMesh(ProduceStaticMesh);
             MeshComp->SetMobility(EComponentMobility::Movable);
         }
+
         DrawDebugBox(ViewPortClientWorld, Location, FVector(50), FColor::Green, false, 2.0f);
 
 		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation EBuildAssetType::StaticMesh"));
@@ -90,26 +115,28 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FVector
     {
 		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation Unknown EBuildAssetType"));
     }
-        
+}
 
-#if 0
-    // Spawn StaticMeshActor
-    AStaticMeshActor* NewActor = ViewPortClientWorld->SpawnActor<AStaticMeshActor>(
-        Location,
-        FRotator::ZeroRotator
+void FBuildTool::DeleteMeshAtLocation(AActor* DeleActor)
+{
+    if (!DeleActor)
+    {
+		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::DeleteMeshAtLocation DeleActor is nullptr"));
+        return;
+    }
+
+    UEditorActorSubsystem* Subsystem = GEditor->GetEditorSubsystem<UEditorActorSubsystem>();
+    
+    if (!Subsystem)
+    {
+		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::DeleteMeshAtLocation UEditorActorSubsystem is nullptr"));
+        return;
+    }
+
+    const FScopedTransaction Transaction(
+        NSLOCTEXT("BuildTool", "DeleteActor", "Delete Actor")
     );
 
-    if (NewActor && NewActor->GetStaticMeshComponent())
-    {
-        // 使用 LoadObject 在非 UObject 构造函数中加载资源
-
-        if (ProduceStaticMesh)
-        {
-            NewActor->GetStaticMeshComponent()->SetStaticMesh(ProduceStaticMesh);
-            NewActor->SetActorScale3D(FVector(1.0f));
-            NewActor->GetStaticMeshComponent()->MarkRenderStateDirty();
-        }
-    }
-	DrawDebugBox(ViewPortClientWorld, Location, FVector(50), FColor::Green, false, 2.0f);
-#endif
+    DeleActor->Modify();
+    Subsystem->DestroyActor(DeleActor);
 }

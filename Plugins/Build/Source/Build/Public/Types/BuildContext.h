@@ -24,4 +24,5 @@ struct FBuildClickedContext
     bool bHit;
     TWeakObjectPtr<UObject> BuildAsset;
 	EBuildAssetType AssetType = EBuildAssetType::None;
+	EBuildEditMode  BuildMode = EBuildEditMode::Add;
 };

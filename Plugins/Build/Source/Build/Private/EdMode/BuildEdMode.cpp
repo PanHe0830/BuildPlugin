@@ -95,6 +95,7 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
     clickedContext.bHit = bHit;
 	clickedContext.AssetType = Type;
 	clickedContext.BuildAsset = SelectedBuildAsset.Get();
+	clickedContext.BuildMode = CurrentMode;
 
     BuildTool->OnClick(clickedContext);
 

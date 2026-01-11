@@ -29,8 +29,8 @@ public class Build : ModuleRules
                 "EditorFramework",
                 "EditorStyle",
                 "LevelEditor",
-                "UnrealEd",   // <- 必须加上
-				"ToolMenus",       // 必须：FToolMenuSection / AddMenuEntry
+                "UnrealEd",
+				"ToolMenus",
 				"PropertyEditor",
 				// ... add private dependencies that you statically link with here ...	
 			}
