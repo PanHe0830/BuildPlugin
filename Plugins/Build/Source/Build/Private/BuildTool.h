@@ -20,7 +20,18 @@ public:
 private:
 	// 功能实现
 	// 在指定位置创建网格体
-	void CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FVector& Location, UObject* BuildAsset, EBuildAssetType type);
+	/*
+		1.点击表面
+
+		2.通过法线算“贴合位置”
+
+		3.用 Bounds 代表占用空间
+
+		4.Spawn 前验证合法性
+
+		5.失败就拒绝生成
+	*/
+	void CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitResult& Location, UObject* BuildAsset, EBuildAssetType type);
 
 	// 删除指定位置的物体
 	void DeleteMeshAtLocation(AActor* DeleActor);

@@ -22,7 +22,7 @@ void FBuildTool::OnClick(const struct FBuildClickedContext& context)
         case EBuildEditMode::Add:
             if (context.Key == EKeys::LeftMouseButton and context.bHit)
             {
-                CreateMeshAtLocation(context.World, context.HitResult.Location, context.BuildAsset.Get(), context.AssetType);
+                CreateMeshAtLocation(context.World, context.HitResult, context.BuildAsset.Get(), context.AssetType);
             }
 			break;
 		case EBuildEditMode::Remove:
@@ -37,29 +37,18 @@ void FBuildTool::OnClick(const struct FBuildClickedContext& context)
     }
 }
 
-void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FVector& Location, UObject* BuildAsset, EBuildAssetType type)
+void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitResult& HitResult, UObject* BuildAsset, EBuildAssetType type)
 {
     if (BuildAsset == nullptr)
     {
         UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation BuildAsset is nullptr"));
 		return;
     }
-	UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation at Location: %s"), *Location.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation at Location: %s"), *Location.ToString());
 
     if (type == EBuildAssetType::Actor)
     {
-		AActor* ProduceActor = Cast<AActor>(BuildAsset);
-        if (ProduceActor == nullptr)
-        {
-			UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation BuildAsset is not AActor"));
-            return;
-        }
-        AActor* NewActor = ViewPortClientWorld->SpawnActor<AActor>(
-            AActor::StaticClass(),
-            Location,
-            FRotator::ZeroRotator
-		);
-        DrawDebugBox(ViewPortClientWorld, Location, FVector(50), FColor::Green, false, 2.0f);
+        DrawDebugBox(ViewPortClientWorld, HitResult.Location, FVector(50), FColor::Green, false, 2.0f);
     }
     else if (type == EBuildAssetType::StaticMesh)
     {
@@ -70,25 +59,60 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FVector
             return;
         }
 
+		// 拿到 Mesh 的边界信息
+        const FBoxSphereBounds MeshBounds = ProduceStaticMesh->GetBounds();
+        const FVector HalfExtent = MeshBounds.BoxExtent;
+
+		// 拿到表面法线
+        const FVector SurfaceNormal = HitResult.ImpactNormal.GetSafeNormal();
+
+        // 加一个极小偏移，防止浮点精度导致贴边重叠
+        constexpr float PlacementEpsilon = 0.1f;
+
+        const FVector CandidateLocation =
+            HitResult.ImpactPoint +
+            SurfaceNormal * (HalfExtent.ProjectOnToNormal(SurfaceNormal).Size() + PlacementEpsilon);
+
+        FCollisionShape CollisionShape =
+            FCollisionShape::MakeBox(HalfExtent);
+
+        FCollisionQueryParams QueryParams;
+        QueryParams.bTraceComplex = false;
+        QueryParams.AddIgnoredActor(HitResult.GetActor()); // 忽略被点击物体
+
+        const bool bBlocked =
+            ViewPortClientWorld->OverlapBlockingTestByChannel(
+                CandidateLocation,
+                FQuat::Identity,
+                ECC_WorldStatic,
+                CollisionShape,
+                QueryParams
+            );
+
+        if (bBlocked)
+        {
+            UE_LOG(LogTemp, Warning, TEXT("Placement blocked"));
+            return;
+        }
+
         const FScopedTransaction Transaction(
             NSLOCTEXT("BuildTool", "CreateActor", "Create Actor")
         );
 
         FActorSpawnParameters SpawnParams;
         SpawnParams.SpawnCollisionHandlingOverride =
-            ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+            ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
 
         AStaticMeshActor* MeshActor =
             ViewPortClientWorld->SpawnActor<AStaticMeshActor>(
-                Location,
+                CandidateLocation,
                 FRotator::ZeroRotator,
                 SpawnParams
             );
 
         if (!MeshActor)
         {
-            UE_LOG(LogTemp, Warning,
-                TEXT("Failed to spawn AStaticMeshActor"));
+            UE_LOG(LogTemp, Warning,TEXT("Failed to spawn AStaticMeshActor"));
             return;
         }
 
@@ -103,7 +127,7 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FVector
             MeshComp->SetMobility(EComponentMobility::Movable);
         }
 
-        DrawDebugBox(ViewPortClientWorld, Location, FVector(50), FColor::Green, false, 2.0f);
+        DrawDebugBox(ViewPortClientWorld, CandidateLocation, FVector(50), FColor::Green, false, 2.0f);
 
 		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation EBuildAssetType::StaticMesh"));
     }
