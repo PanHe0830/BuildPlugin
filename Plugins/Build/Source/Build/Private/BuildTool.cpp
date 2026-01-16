@@ -8,7 +8,7 @@
 
 FBuildTool::FBuildTool()
 {
-    
+    PreviewActor = 
 }
 
 FBuildTool::~FBuildTool()
@@ -44,7 +44,12 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitRes
         UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation BuildAsset is nullptr"));
 		return;
     }
-	//UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation at Location: %s"), *Location.ToString());
+
+    // Éú³ÉÔ¤ÀÀActor
+    if (PreviewActor.IsValid())
+    {
+        SpawnPreViewActor();
+    }
 
     if (type == EBuildAssetType::Actor)
     {
@@ -186,4 +191,19 @@ void FBuildTool::DeleteMeshAtLocation(AActor* DeleActor)
 
     DeleActor->Modify();
     Subsystem->DestroyActor(DeleActor);
+}
+
+void FBuildTool::DestroyPreviewActor()
+{
+    if (!PreviewActor.IsValid())
+    {
+        PreviewActor->Destroy();
+        PreviewActor = nullptr;
+		PreviewMeshComponent = nullptr;
+    }
+}
+
+void FBuildTool::SpawnPreViewActor()
+{
+
 }

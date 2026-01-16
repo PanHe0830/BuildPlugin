@@ -13,35 +13,21 @@ public:
 
 	void OnClick(const FBuildClickedContext& context);
 
-	// 设置生成物体的网格资源
-	//void SetProduceStaticMesh(class UStaticMesh* InStaticMesh) { ProduceStaticMesh = InStaticMesh; }
-	//void SetProduceActorMesh(TSubclassOf<class AActor> InActorClass) { ProduceActorMesh = InActorClass; }
-
+	// 销毁预览 Actor
+	void DestroyPreviewActor();
 private:
 	// 功能实现
 	// 在指定位置创建网格体
-	/*
-		1.点击表面
-
-		2.通过法线算“贴合位置”
-
-		3.用 Bounds 代表占用空间
-
-		4.Spawn 前验证合法性
-
-		5.失败就拒绝生成
-	*/
 	void CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitResult& Location, UObject* BuildAsset, EBuildAssetType type);
 
 	// 删除指定位置的物体
 	void DeleteMeshAtLocation(AActor* DeleActor);
 
+	// 生成预览 Actor
+	void SpawnPreViewActor();
+
 private:
-	// 生成物体的网格资源
-	//UPROPERTY(Transient) //Transient 作用是不被序列化
-	//class UStaticMesh* ProduceStaticMesh;
-	//
-	//// 生成物体的Actor类型(这个主要用于蓝图)
-	//UPROPERTY(Transient) //Transient 作用是不被序列化
-	//class TSubclassOf<class AActor> ProduceActorMesh;
+	// 预览用的 Actor
+	TWeakObjectPtr<AActor> PreviewActor;
+	UStaticMeshComponent* PreviewMeshComponent = nullptr;
 };
