@@ -69,16 +69,39 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitRes
         // 加一个极小偏移，防止浮点精度导致贴边重叠
         constexpr float PlacementEpsilon = 0.1f;
 
+        //const FVector CandidateLocation =
+        //    HitResult.ImpactPoint +
+        //    SurfaceNormal * (HalfExtent.ProjectOnToNormal(SurfaceNormal).Size() + PlacementEpsilon);
+
+        //拿到被点击物体的 Bounds
+        FVector HitHalfExtent = FVector::ZeroVector;
+
+        if (const UPrimitiveComponent* HitComp = HitResult.GetComponent())
+        {
+            HitHalfExtent = HitComp->Bounds.BoxExtent;
+        }
+
+        //沿法线方向分别投影两个 HalfExtent
+        const float NewMeshExtentAlongNormal =
+            HalfExtent.ProjectOnToNormal(SurfaceNormal).Size();
+
+        const float HitMeshExtentAlongNormal =
+            HitHalfExtent.ProjectOnToNormal(SurfaceNormal).Size();
+
         const FVector CandidateLocation =
             HitResult.ImpactPoint +
-            SurfaceNormal * (HalfExtent.ProjectOnToNormal(SurfaceNormal).Size() + PlacementEpsilon);
+            SurfaceNormal * (NewMeshExtentAlongNormal + PlacementEpsilon);
 
         FCollisionShape CollisionShape =
             FCollisionShape::MakeBox(HalfExtent);
 
         FCollisionQueryParams QueryParams;
         QueryParams.bTraceComplex = false;
-        QueryParams.AddIgnoredActor(HitResult.GetActor()); // 忽略被点击物体
+        if (HitResult.GetComponent())
+        {
+			QueryParams.AddIgnoredComponent(HitResult.GetComponent()); // 忽略被点击组件
+            QueryParams.AddIgnoredActor(HitResult.GetActor()); // 忽略被点击物体
+        }
 
         const bool bBlocked =
             ViewPortClientWorld->OverlapBlockingTestByChannel(
