@@ -18,11 +18,23 @@ enum class EBuildAssetType : uint8
 
 struct FBuildClickedContext
 {
+    FBuildClickedContext()
+    {
+        World = nullptr;
+        bHit = false;
+		BuildAsset = nullptr;
+        AssetType = EBuildAssetType::None;
+        BuildMode = EBuildEditMode::Add;
+        IgnoreActors.Empty();
+		IgnoreComponents.Empty();
+    }
     UWorld* World;
     FHitResult HitResult;
     FKey Key;
     bool bHit;
     TWeakObjectPtr<UObject> BuildAsset;
-	EBuildAssetType AssetType = EBuildAssetType::None;
-	EBuildEditMode  BuildMode = EBuildEditMode::Add;
+    EBuildAssetType AssetType;
+    EBuildEditMode  BuildMode;
+    TArray<AActor*> IgnoreActors;
+    TArray<UStaticMeshComponent*> IgnoreComponents;
 };

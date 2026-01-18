@@ -1,6 +1,7 @@
-﻿#include "BuildTool.h"
+﻿#include "EdMode/BuildEdMode.h"
 #include "ToolKit/BuildEdModeToolKit.h"
-#include "EdMode/BuildEdMode.h"
+#include "Build/Private/BuildPreviewSystem.h"
+#include "BuildTool.h"
 
 #include "Engine/World.h"
 #include "Engine/Selection.h"
@@ -32,7 +33,8 @@ void FBuildEdMode::Enter()
 {
 	FEdMode::Enter();
 
-    BuildTool = MakeShared<FBuildTool>();;
+    BuildTool = MakeShared<FBuildTool>();
+	BuildPreview = new FBuildPreviewSystem();
 
     if (!Toolkit.IsValid())
     {
@@ -62,7 +64,74 @@ void FBuildEdMode::Exit()
         BuildTool.Reset();
     }
 
+    if (BuildPreview)
+    {
+        BuildPreview->StopPreview();
+		delete BuildPreview;
+		BuildPreview = nullptr;
+    }
+
     FEdMode::Exit();
+}
+
+bool FBuildEdMode::MouseEnter(FEditorViewportClient* ViewportClient, FViewport* Viewport, int32 x, int32 y)
+{
+    if (!BuildPreview) return false;
+
+    UStaticMesh* TempMesh = Cast<UStaticMesh>(SelectedBuildAsset.Get());
+	if (!TempMesh) return false;
+
+	BuildPreview->StartPreview(ViewportClient->GetWorld(), TempMesh);
+    return true;
+}
+
+bool FBuildEdMode::MouseLeave(FEditorViewportClient* ViewportClient, FViewport* Viewport)
+{
+    if (!BuildPreview) return false;
+
+	BuildPreview->StopPreview();
+    return true;
+}
+
+bool FBuildEdMode::MouseMove(FEditorViewportClient* ViewportClient, FViewport* Viewport, int32 x, int32 y)
+{
+    if (!BuildPreview && !BuildPreview->HasValidPreview()) return false;
+
+    UWorld* World = ViewportClient->GetWorld();
+    if (!World) return false;
+
+    
+    //FIntPoint ViewportSize = ViewportClient->Viewport->GetSizeXY();
+    //float NormalizedX = (float)x / ViewportSize.X;
+    //float NormalizedY = (float)y / ViewportSize.Y;
+
+    FVector CamLocation = ViewportClient->GetViewLocation(); // 获得摄像机在三维世界的坐标
+    FVector CamForward = ViewportClient->GetCursorWorldLocationFromMousePos().GetDirection();
+
+    FVector RayOrigin = CamLocation;
+    FVector RayDirection = CamForward;
+    FVector End = RayOrigin + RayDirection * TraceDistance;
+
+    FHitResult Hit;
+    FCollisionQueryParams Params(SCENE_QUERY_STAT(BuildPreviewTrace), true);
+	Params.AddIgnoredActor(BuildPreview->GetPreviewActor());
+    Params.AddIgnoredComponent(BuildPreview->GetPreviewMeshComponent());
+    bool bHit = World->LineTraceSingleByChannel(
+        Hit, 
+        RayOrigin, 
+        End, 
+        ECC_Visibility, 
+        Params
+    );
+
+    FVector Location = bHit ? Hit.Location : FVector(RayOrigin.X, RayOrigin.Y, 0.f);
+    FRotator Rotation = FRotator::ZeroRotator; // 或者对齐 Hit.Normal
+    FVector Scale = FVector(1.f);
+
+    FTransform PreviewTransform(Rotation, Location, Scale);
+	BuildPreview->UpdatePreviewTransform(PreviewTransform);
+
+    return true;
 }
 
 bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProxy* HitProxy, const FViewportClick& Click)
@@ -80,7 +149,9 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
     // 执行射线检测
     FHitResult HitResult;
     FCollisionQueryParams Params(SCENE_QUERY_STAT(BuildEdModeClick), true);
-    bool bHit = InViewportClient->GetWorld()->LineTraceSingleByChannel(
+    Params.AddIgnoredActor(BuildPreview->GetPreviewActor());
+    Params.AddIgnoredComponent(BuildPreview->GetPreviewMeshComponent());
+    bool bHit = World->LineTraceSingleByChannel(
         HitResult,
         RayOrigin,
         End,
@@ -96,6 +167,8 @@ bool FBuildEdMode::HandleClick(FEditorViewportClient* InViewportClient, HHitProx
 	clickedContext.AssetType = Type;
 	clickedContext.BuildAsset = SelectedBuildAsset.Get();
 	clickedContext.BuildMode = CurrentMode;
+	clickedContext.IgnoreActors.Add(BuildPreview->GetPreviewActor());
+    clickedContext.IgnoreComponents.Add(BuildPreview->GetPreviewMeshComponent());
 
     BuildTool->OnClick(clickedContext);
 
@@ -149,6 +222,7 @@ void FBuildEdMode::SetBuildAsset(UObject* InObject)
 void FBuildEdMode::OnBuildAssetChanged(UObject* InObject)
 {
     SelectedBuildAsset = InObject;
+	//BuildPreview->StartPreview(,InObject);
     if ( Cast<AActor>(InObject) )
     {
         Type = EBuildAssetType::Actor;

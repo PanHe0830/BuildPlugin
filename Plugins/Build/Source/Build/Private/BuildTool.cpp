@@ -8,7 +8,7 @@
 
 FBuildTool::FBuildTool()
 {
-    PreviewActor = 
+    
 }
 
 FBuildTool::~FBuildTool()
@@ -22,7 +22,7 @@ void FBuildTool::OnClick(const struct FBuildClickedContext& context)
         case EBuildEditMode::Add:
             if (context.Key == EKeys::LeftMouseButton and context.bHit)
             {
-                CreateMeshAtLocation(context.World, context.HitResult, context.BuildAsset.Get(), context.AssetType);
+                CreateMeshAtLocation(context.World, context.HitResult, context.BuildAsset.Get(), context.AssetType,context.IgnoreActors,context.IgnoreComponents);
             }
 			break;
 		case EBuildEditMode::Remove:
@@ -37,18 +37,12 @@ void FBuildTool::OnClick(const struct FBuildClickedContext& context)
     }
 }
 
-void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitResult& HitResult, UObject* BuildAsset, EBuildAssetType type)
+void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitResult& HitResult, UObject* BuildAsset, EBuildAssetType type, TArray<AActor*> IgnoreActors, TArray<UStaticMeshComponent*> IgnoreStaticMeshComponent)
 {
     if (BuildAsset == nullptr)
     {
         UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation BuildAsset is nullptr"));
 		return;
-    }
-
-    // 生成预览Actor
-    if (PreviewActor.IsValid())
-    {
-        SpawnPreViewActor();
     }
 
     if (type == EBuildAssetType::Actor)
@@ -106,6 +100,14 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitRes
         {
 			QueryParams.AddIgnoredComponent(HitResult.GetComponent()); // 忽略被点击组件
             QueryParams.AddIgnoredActor(HitResult.GetActor()); // 忽略被点击物体
+        }
+        QueryParams.AddIgnoredActors(IgnoreActors);
+        for (UStaticMeshComponent* comp : IgnoreStaticMeshComponent)
+        {
+            if (comp)
+            {
+                QueryParams.AddIgnoredComponent(comp);  // 忽略每一个组件
+            }
         }
 
         const bool bBlocked =
@@ -191,19 +193,4 @@ void FBuildTool::DeleteMeshAtLocation(AActor* DeleActor)
 
     DeleActor->Modify();
     Subsystem->DestroyActor(DeleActor);
-}
-
-void FBuildTool::DestroyPreviewActor()
-{
-    if (!PreviewActor.IsValid())
-    {
-        PreviewActor->Destroy();
-        PreviewActor = nullptr;
-		PreviewMeshComponent = nullptr;
-    }
-}
-
-void FBuildTool::SpawnPreViewActor()
-{
-
 }

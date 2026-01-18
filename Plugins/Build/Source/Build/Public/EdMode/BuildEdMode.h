@@ -1,11 +1,13 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EdMode.h"
 #include "Types/BuildModeTypes.h"
 #include "Types/BuildContext.h"
-#include "EdMode.h"
 
 #define TRANCE_DISTANCE_LENGTH 100000.0f
+
+class FBuildPreviewSystem;
 
 class FBuildEdMode : public FEdMode
 {
@@ -18,6 +20,12 @@ public:
 
     virtual void Enter() override;
     virtual void Exit() override;
+
+    virtual bool MouseEnter(FEditorViewportClient* ViewportClient, FViewport* Viewport, int32 x, int32 y) override;
+
+    virtual bool MouseLeave(FEditorViewportClient* ViewportClient, FViewport* Viewport) override;
+
+    virtual bool MouseMove(FEditorViewportClient* ViewportClient, FViewport* Viewport, int32 x, int32 y) override;
 
     /** 输入鼠标点击事件 */
     virtual bool HandleClick(FEditorViewportClient* InViewportClient, HHitProxy* HitProxy, const FViewportClick& Click) override;
@@ -54,6 +62,9 @@ private:
 	// 当前选择的资源
     TWeakObjectPtr<UObject> SelectedBuildAsset;
 	EBuildAssetType Type = EBuildAssetType::None;
+
+	// 预览系统
+	FBuildPreviewSystem* BuildPreview;
 
 public:
 	FORCEINLINE EBuildEditMode GetCurrentMode() const { return CurrentMode; }

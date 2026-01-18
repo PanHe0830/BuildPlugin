@@ -12,22 +12,11 @@ public:
 	~FBuildTool();
 
 	void OnClick(const FBuildClickedContext& context);
-
-	// 销毁预览 Actor
-	void DestroyPreviewActor();
 private:
 	// 功能实现
 	// 在指定位置创建网格体
-	void CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitResult& Location, UObject* BuildAsset, EBuildAssetType type);
+	void CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitResult& Location, UObject* BuildAsset, EBuildAssetType type, TArray<AActor*> IgnoreActors, TArray<UStaticMeshComponent*> IgnoreStaticMeshComponent);
 
 	// 删除指定位置的物体
 	void DeleteMeshAtLocation(AActor* DeleActor);
-
-	// 生成预览 Actor
-	void SpawnPreViewActor();
-
-private:
-	// 预览用的 Actor
-	TWeakObjectPtr<AActor> PreviewActor;
-	UStaticMeshComponent* PreviewMeshComponent = nullptr;
 };
