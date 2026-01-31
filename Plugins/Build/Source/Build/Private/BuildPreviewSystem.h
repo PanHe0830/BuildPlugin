@@ -45,6 +45,15 @@ public:
 		return Preview.MeshComponent.Get();
 	}
 
+	FBoxSphereBounds GetPreviewBounds() const
+	{
+		if (Preview.MeshComponent.IsValid())
+		{
+			return Preview.MeshComponent->Bounds;
+		}
+		return FBoxSphereBounds(ForceInit);
+	}
+
 private:
     FBuildPreviewInstance Preview;
 };

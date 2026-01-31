@@ -1,4 +1,4 @@
-#include "BuildTool.h"
+ï»¿#include "BuildTool.h"
 
 #include "DrawDebugHelpers.h"
 #include "Engine/StaticMeshActor.h"
@@ -8,7 +8,7 @@
 
 FBuildTool::FBuildTool()
 {
-    
+	
 }
 
 FBuildTool::~FBuildTool()
@@ -17,185 +17,183 @@ FBuildTool::~FBuildTool()
 
 void FBuildTool::OnClick(const struct FBuildClickedContext& context)
 {
-    switch (context.BuildMode)
-    {
-        case EBuildEditMode::Add:
-            if (context.Key == EKeys::LeftMouseButton and context.bHit)
-            {
-                CreateMeshAtLocation(context.World, context.HitResult, context.BuildAsset.Get(), context.AssetType,context.IgnoreActors,context.IgnoreComponents);
-            }
+	switch (context.BuildMode)
+	{
+		case EBuildEditMode::Add:
+			if (context.Key == EKeys::LeftMouseButton and context.bHit)
+			{
+				CreateMeshAtLocation(context.World, context.HitResult, context.BuildAsset.Get(), context.AssetType,context.IgnoreActors,context.IgnoreComponents);
+			}
 			break;
 		case EBuildEditMode::Remove:
-            if (context.Key == EKeys::LeftMouseButton and context.bHit)
-            {
-                DeleteMeshAtLocation(context.HitResult.GetActor());
-            }
-            break;
-        default:
-            UE_LOG(LogTemp, Warning, TEXT("Current Mode is not exist is this BuildTool"));
-            break;
-    }
+			if (context.Key == EKeys::LeftMouseButton and context.bHit)
+			{
+				DeleteMeshAtLocation(context.HitResult.GetActor());
+			}
+			break;
+		default:
+			UE_LOG(LogTemp, Warning, TEXT("Current Mode is not exist is this BuildTool"));
+			break;
+	}
 }
 
 void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitResult& HitResult, UObject* BuildAsset, EBuildAssetType type, TArray<AActor*> IgnoreActors, TArray<UStaticMeshComponent*> IgnoreStaticMeshComponent)
 {
-    if (BuildAsset == nullptr)
-    {
-        UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation BuildAsset is nullptr"));
+	if (BuildAsset == nullptr)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation BuildAsset is nullptr"));
 		return;
-    }
+	}
 
-    if (type == EBuildAssetType::Actor)
-    {
-        DrawDebugBox(ViewPortClientWorld, HitResult.Location, FVector(50), FColor::Green, false, 2.0f);
-    }
-    else if (type == EBuildAssetType::StaticMesh)
-    {
-        UStaticMesh* ProduceStaticMesh = Cast<UStaticMesh>(BuildAsset);
-        if (ProduceStaticMesh == nullptr)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation BuildAsset is not UStaticMesh"));
-            return;
-        }
+	if (type == EBuildAssetType::Actor)
+	{
+		DrawDebugBox(ViewPortClientWorld, HitResult.Location, FVector(50), FColor::Green, false, 2.0f);
+	}
+	else if (type == EBuildAssetType::StaticMesh)
+	{
+		UStaticMesh* ProduceStaticMesh = Cast<UStaticMesh>(BuildAsset);
+		FPlacementResult Result = CanPlaceActorAtLocation(ViewPortClientWorld, HitResult, ProduceStaticMesh->GetBounds(), type, IgnoreActors, IgnoreStaticMeshComponent);
 
-		// ÄÃµ½ Mesh µÄ±ß½çÐÅÏ¢
-        const FBoxSphereBounds MeshBounds = ProduceStaticMesh->GetBounds();
-        const FVector HalfExtent = MeshBounds.BoxExtent;
+		if (!Result.bCanPlace)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation Cannot place actor: %s"), *Result.FailMessage);
+			return;
+		}
 
-		// ÄÃµ½±íÃæ·¨Ïß
-        const FVector SurfaceNormal = HitResult.ImpactNormal.GetSafeNormal();
+		const FScopedTransaction Transaction(
+			NSLOCTEXT("BuildTool", "CreateActor", "Create Actor")
+		);
 
-        // ¼ÓÒ»¸ö¼«Ð¡Æ«ÒÆ£¬·ÀÖ¹¸¡µã¾«¶Èµ¼ÖÂÌù±ßÖØµþ
-        constexpr float PlacementEpsilon = 0.1f;
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride =
+			ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
 
-        //const FVector CandidateLocation =
-        //    HitResult.ImpactPoint +
-        //    SurfaceNormal * (HalfExtent.ProjectOnToNormal(SurfaceNormal).Size() + PlacementEpsilon);
+		AStaticMeshActor* MeshActor =
+			ViewPortClientWorld->SpawnActor<AStaticMeshActor>(
+				Result.FinalTransform.GetLocation(),
+				FRotator::ZeroRotator,
+				SpawnParams
+			);
 
-        //ÄÃµ½±»µã»÷ÎïÌåµÄ Bounds
-        FVector HitHalfExtent = FVector::ZeroVector;
+		if (!MeshActor)
+		{
+			UE_LOG(LogTemp, Warning,TEXT("Failed to spawn AStaticMeshActor"));
+			return;
+		}
 
-        if (const UPrimitiveComponent* HitComp = HitResult.GetComponent())
-        {
-            HitHalfExtent = HitComp->Bounds.BoxExtent;
-        }
+		MeshActor->SetFlags(RF_Transactional);
+		MeshActor->Modify();
 
-        //ÑØ·¨Ïß·½Ïò·Ö±ðÍ¶Ó°Á½¸ö HalfExtent
-        const float NewMeshExtentAlongNormal =
-            HalfExtent.ProjectOnToNormal(SurfaceNormal).Size();
-
-        const float HitMeshExtentAlongNormal =
-            HitHalfExtent.ProjectOnToNormal(SurfaceNormal).Size();
-
-        const FVector CandidateLocation =
-            HitResult.ImpactPoint +
-            SurfaceNormal * (NewMeshExtentAlongNormal + PlacementEpsilon);
-
-        FCollisionShape CollisionShape =
-            FCollisionShape::MakeBox(HalfExtent);
-
-        FCollisionQueryParams QueryParams;
-        QueryParams.bTraceComplex = false;
-        if (HitResult.GetComponent())
-        {
-			QueryParams.AddIgnoredComponent(HitResult.GetComponent()); // ºöÂÔ±»µã»÷×é¼þ
-            QueryParams.AddIgnoredActor(HitResult.GetActor()); // ºöÂÔ±»µã»÷ÎïÌå
-        }
-        QueryParams.AddIgnoredActors(IgnoreActors);
-        for (UStaticMeshComponent* comp : IgnoreStaticMeshComponent)
-        {
-            if (comp)
-            {
-                QueryParams.AddIgnoredComponent(comp);  // ºöÂÔÃ¿Ò»¸ö×é¼þ
-            }
-        }
-
-        const bool bBlocked =
-            ViewPortClientWorld->OverlapBlockingTestByChannel(
-                CandidateLocation,
-                FQuat::Identity,
-                ECC_WorldStatic,
-                CollisionShape,
-                QueryParams
-            );
-
-        if (bBlocked)
-        {
-            UE_LOG(LogTemp, Warning, TEXT("Placement blocked"));
-            return;
-        }
-
-        const FScopedTransaction Transaction(
-            NSLOCTEXT("BuildTool", "CreateActor", "Create Actor")
-        );
-
-        FActorSpawnParameters SpawnParams;
-        SpawnParams.SpawnCollisionHandlingOverride =
-            ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
-
-        AStaticMeshActor* MeshActor =
-            ViewPortClientWorld->SpawnActor<AStaticMeshActor>(
-                CandidateLocation,
-                FRotator::ZeroRotator,
-                SpawnParams
-            );
-
-        if (!MeshActor)
-        {
-            UE_LOG(LogTemp, Warning,TEXT("Failed to spawn AStaticMeshActor"));
-            return;
-        }
-
-        MeshActor->SetFlags(RF_Transactional);
-        MeshActor->Modify();
-
-        // ÉèÖÃ Mesh
-        UStaticMeshComponent* MeshComp = MeshActor->GetStaticMeshComponent();
-        if (MeshComp)
-        {
-            MeshComp->SetStaticMesh(ProduceStaticMesh);
-            MeshComp->SetMobility(EComponentMobility::Movable);
-        }
-
-        DrawDebugBox(ViewPortClientWorld, CandidateLocation, FVector(50), FColor::Green, false, 2.0f);
-
-		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation EBuildAssetType::StaticMesh"));
-    }
-    else if (type == EBuildAssetType::BluePrint)
-    {
+		UStaticMeshComponent* MeshComp = MeshActor->GetStaticMeshComponent();
+		if (MeshComp)
+		{
+			MeshComp->SetStaticMesh(ProduceStaticMesh);
+			MeshComp->SetMobility(EComponentMobility::Movable);
+		}
+	}
+	else if (type == EBuildAssetType::BluePrint)
+	{
 		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation EBuildAssetType::BluePrint"));
-    }
-    else
-    {
+	}
+	else
+	{
 		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation Unknown EBuildAssetType"));
-    }
+	}
 }
 
 void FBuildTool::DeleteMeshAtLocation(AActor* DeleActor)
 {
-    if (!DeleActor)
-    {
+	if (!DeleActor)
+	{
 		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::DeleteMeshAtLocation DeleActor is nullptr"));
-        return;
-    }
+		return;
+	}
 
-    UEditorActorSubsystem* Subsystem = GEditor->GetEditorSubsystem<UEditorActorSubsystem>();
-    
-    if (!Subsystem)
-    {
+	UEditorActorSubsystem* Subsystem = GEditor->GetEditorSubsystem<UEditorActorSubsystem>();
+	
+	if (!Subsystem)
+	{
 		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::DeleteMeshAtLocation UEditorActorSubsystem is nullptr"));
-        return;
-    }
+		return;
+	}
 
-    const FScopedTransaction Transaction(
-        NSLOCTEXT("BuildTool", "DeleteActor", "Delete Actor")
-    );
+	const FScopedTransaction Transaction(
+		NSLOCTEXT("BuildTool", "DeleteActor", "Delete Actor")
+	);
 
-    DeleActor->Modify();
-    Subsystem->DestroyActor(DeleActor);
+	DeleActor->Modify();
+	Subsystem->DestroyActor(DeleActor);
 }
 
-bool FBuildTool::CanPlaceActorAtLocation(FTransform& OutTransform)
+FPlacementResult FBuildTool::CanPlaceActorAtLocation(UWorld* ViewPortClientWorld, const FHitResult& HitResult, FBoxSphereBounds BuildBound, EBuildAssetType type, TArray<AActor*> IgnoreActors, TArray<UStaticMeshComponent*> IgnoreStaticMeshComponent)
 {
-    return true;
+	FPlacementResult retResult;
+
+	const FVector HalfExtent = BuildBound.BoxExtent;
+
+	const FVector SurfaceNormal = HitResult.ImpactNormal.GetSafeNormal();
+
+	constexpr float PlacementEpsilon = 0.1f;
+
+	FVector HitHalfExtent = FVector::ZeroVector;
+
+	if (const UPrimitiveComponent* HitComp = HitResult.GetComponent())
+	{
+		HitHalfExtent = HitComp->Bounds.BoxExtent;
+	}
+
+	const float NewMeshExtentAlongNormal =
+		HalfExtent.ProjectOnToNormal(SurfaceNormal).Size();
+
+	const float HitMeshExtentAlongNormal =
+		HitHalfExtent.ProjectOnToNormal(SurfaceNormal).Size();
+
+	const FVector CandidateLocation =
+		HitResult.ImpactPoint +
+		SurfaceNormal * (NewMeshExtentAlongNormal + PlacementEpsilon);
+
+	// è®¾ç½®æœ€ç»ˆä½ç½®å’Œæ—‹è½¬
+	retResult.FinalTransform = FTransform(FRotator::ZeroRotator, CandidateLocation);
+
+	FCollisionShape CollisionShape =
+		FCollisionShape::MakeBox(HalfExtent);
+
+	FCollisionQueryParams QueryParams;
+	QueryParams.bTraceComplex = false;
+	if (HitResult.GetComponent())
+	{
+		QueryParams.AddIgnoredComponent(HitResult.GetComponent());
+		QueryParams.AddIgnoredActor(HitResult.GetActor());
+	}
+	QueryParams.AddIgnoredActors(IgnoreActors);
+	for (UStaticMeshComponent* comp : IgnoreStaticMeshComponent)
+	{
+		if (comp)
+		{
+			QueryParams.AddIgnoredComponent(comp);
+		}
+	}
+
+	const bool bBlocked =
+		ViewPortClientWorld->OverlapBlockingTestByChannel(
+			CandidateLocation,
+			FQuat::Identity,
+			ECC_WorldStatic,
+			CollisionShape,
+			QueryParams
+		);
+
+	if (bBlocked)
+	{
+		retResult.bCanPlace = false;
+		retResult.FailReason = EPlacementFailReason::BlockedByCollision;
+		retResult.FailMessage = TEXT("Placement blocked");
+		return retResult;
+	}
+
+	retResult.bCanPlace = true;
+	retResult.FailReason = EPlacementFailReason::None;
+	retResult.FailMessage = TEXT("");
+
+	return retResult;
 }

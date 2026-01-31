@@ -1,4 +1,4 @@
-#pragma once
+ï»¿#pragma once
 
 #include "CoreMinimal.h"
 #include "Types/BuildContext.h"
@@ -9,16 +9,15 @@ enum class EPlacementFailReason : uint8
 {
 	None,
 	InvalidAsset,
-	NoHitResult,
 	BlockedByCollision,
-	UnsupportedSurface,
 };
 
 struct FPlacementResult
 {
-	bool bCanPlace = false; // ÊÇ·ñ¿ÉÒÔ·ÅÖÃ Ö»ÓĞµ± bCanPlace Îª true Ê±£¬FinalTransform ²ÅÓĞĞ§
-	FTransform FinalTransform; // ×îÖÕÓÃÓÚ·ÅÖÃµÄÊÀ½ç Transform
-	EPlacementFailReason FailReason = EPlacementFailReason::None; // ·ÅÖÃÊ§°ÜµÄÔ­Òò
+	bool bCanPlace = false;
+	FTransform FinalTransform;
+	EPlacementFailReason FailReason;
+	FString FailMessage;
 };
 
 class FBuildTool
@@ -29,25 +28,10 @@ public:
 
 	void OnClick(const FBuildClickedContext& context);
 private:
-	// ¹¦ÄÜÊµÏÖ
-	// ÔÚÖ¸¶¨Î»ÖÃ´´½¨Íø¸ñÌå
 	void CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitResult& Location, UObject* BuildAsset, EBuildAssetType type, TArray<AActor*> IgnoreActors, TArray<UStaticMeshComponent*> IgnoreStaticMeshComponent);
 
-	// É¾³ıÖ¸¶¨Î»ÖÃµÄÎïÌå
 	void DeleteMeshAtLocation(AActor* DeleActor);
 
-	/**
-	* ÅĞ¶Ïµ±Ç°Ô¤ÀÀ Actor ÊÇ·ñ¿ÉÒÔÔÚÖ¸¶¨¹æÔòÏÂ·ÅÖÃ¡£
-	*
-	* Èô·µ»Ø true£¬OutTransform ½«°üº¬×îÖÕÓÃÓÚ·ÅÖÃµÄÊÀ½ç Transform£»
-	* Èô·µ»Ø false£¬OutTransform µÄÄÚÈİ²»Ó¦±»Ê¹ÓÃ¡£
-	*
-	* ¸ÃÅĞ¶ÏÍ¨³£°üº¬£º
-	* - ·ÅÖÃÎ»ÖÃÊÇ·ñÃüÖĞ¿É½¨ÔìÇøÓò
-	* - ÊÇ·ñÓëÒÑÓĞ Actor ·¢ÉúÅö×²£¨ºöÂÔÔ¤ÀÀ Actor ±¾Éí£©
-	*
-	* @param OutTransform µ±·ÅÖÃºÏ·¨Ê±£¬·µ»Ø¼ÆËãºóµÄ·ÅÖÃ Transform
-	* @return true ±íÊ¾Âú×ãËùÓĞ·ÅÖÃ¹æÔò£¬¿ÉÒÔ·ÅÖÃ
-	*/
-	bool CanPlaceActorAtLocation(FTransform& OutTransform);
+public:
+	FPlacementResult CanPlaceActorAtLocation(UWorld* ViewPortClientWorld, const FHitResult& HitResult, FBoxSphereBounds BuildBound, EBuildAssetType type, TArray<AActor*> IgnoreActors, TArray<UStaticMeshComponent*> IgnoreStaticMeshComponent);
 };

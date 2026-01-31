@@ -132,67 +132,20 @@ bool FBuildEdMode::MouseMove(FEditorViewportClient* ViewportClient, FViewport* V
         Params
     );
 
-    const FBoxSphereBounds MeshBounds = TempMesh->GetBounds();
-    const FVector HalfExtent = MeshBounds.BoxExtent;
+	TArray<AActor*> IgnoreActors;
+	IgnoreActors.Add(BuildPreview->GetPreviewActor());
+    IgnoreActors.Add(Hit.GetActor());
 
-    // 拿到表面法线
-    const FVector SurfaceNormal = Hit.ImpactNormal.GetSafeNormal();
+	TArray<UStaticMeshComponent*> IgnoreComponents;
+	IgnoreComponents.Add(BuildPreview->GetPreviewMeshComponent());
 
-    // 加一个极小偏移，防止浮点精度导致贴边重叠
-    constexpr float PlacementEpsilon = 0.1f;
-
-    //拿到被点击物体的 Bounds
-    FVector HitHalfExtent = FVector::ZeroVector;
-
-    if (const UPrimitiveComponent* HitComp = Hit.GetComponent())
+    FPlacementResult result = BuildTool->CanPlaceActorAtLocation(World, Hit, BuildPreview->GetPreviewBounds(), Type, IgnoreActors, IgnoreComponents);
+    if (!result.bCanPlace)
     {
-        HitHalfExtent = HitComp->Bounds.BoxExtent;
+        // TODO 设置预览为红色
+        //UE_LOG(LogTemp, Warning, TEXT("Current PreviewAsset is blocked"));
     }
-
-    //沿法线方向分别投影两个 HalfExtent
-    const float NewMeshExtentAlongNormal =
-        HalfExtent.ProjectOnToNormal(SurfaceNormal).Size();
-
-    const float HitMeshExtentAlongNormal =
-        HitHalfExtent.ProjectOnToNormal(SurfaceNormal).Size();
-
-    const FVector CandidateLocation =
-        Hit.ImpactPoint +
-        SurfaceNormal * (NewMeshExtentAlongNormal + PlacementEpsilon);
-
-    FCollisionShape CollisionShape =
-        FCollisionShape::MakeBox(HalfExtent);
-
-    FCollisionQueryParams QueryParams;
-    QueryParams.bTraceComplex = false;
-    if (Hit.GetComponent())
-    {
-        QueryParams.AddIgnoredComponent(Hit.GetComponent()); // 忽略被点击组件
-        QueryParams.AddIgnoredActor(Hit.GetActor()); // 忽略被点击物体
-        QueryParams.AddIgnoredActor(BuildPreview->GetPreviewActor()); // 忽略被点击物体
-    }
-
-    const bool bBlocked =
-        World->OverlapBlockingTestByChannel(
-            CandidateLocation,
-            FQuat::Identity,
-            ECC_WorldStatic,
-            CollisionShape,
-            QueryParams
-        );
-
-    FVector Location = CandidateLocation;// bHit ? Hit.Location : FVector(RayOrigin.X, RayOrigin.Y, 0.f);
-    FRotator Rotation = FRotator::ZeroRotator; // 或者对齐 Hit.Normal
-    FVector Scale = FVector(1.f);
-
-    FTransform PreviewTransform(Rotation, Location, Scale);
-    BuildPreview->UpdatePreviewTransform(PreviewTransform);
-
-    if (bBlocked)
-    {
-		// TODO 设置预览为红色
-        UE_LOG(LogTemp, Warning, TEXT("Current PreviewAsset is blocked"));
-    }
+    BuildPreview->UpdatePreviewTransform(result.FinalTransform);
 
     return true;
 }
