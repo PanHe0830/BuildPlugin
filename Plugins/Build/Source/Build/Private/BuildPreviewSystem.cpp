@@ -25,6 +25,7 @@ void FBuildPreviewSystem::StartPreview(UWorld* ViewPortClientWorld , UStaticMesh
 
     Preview.Actor = Actor;
     Preview.MeshComponent = MeshComp;
+
 }
 
 

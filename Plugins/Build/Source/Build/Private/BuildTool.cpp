@@ -194,3 +194,8 @@ void FBuildTool::DeleteMeshAtLocation(AActor* DeleActor)
     DeleActor->Modify();
     Subsystem->DestroyActor(DeleActor);
 }
+
+bool FBuildTool::CanPlaceActorAtLocation(FTransform& OutTransform)
+{
+    return true;
+}
