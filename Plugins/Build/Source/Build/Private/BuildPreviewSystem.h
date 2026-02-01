@@ -29,6 +29,7 @@ public:
 	void StartPreview(UWorld* ViewPortClientWorld, UStaticMesh* InMesh);
     void UpdatePreviewTransform(const FTransform& InTransform);
     void StopPreview();
+	void SetPreviewMaterial(UMaterialInterface* InMaterial);
 
     bool HasValidPreview() const
     {

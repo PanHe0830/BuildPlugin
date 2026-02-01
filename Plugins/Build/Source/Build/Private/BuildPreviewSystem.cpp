@@ -25,7 +25,6 @@ void FBuildPreviewSystem::StartPreview(UWorld* ViewPortClientWorld , UStaticMesh
 
     Preview.Actor = Actor;
     Preview.MeshComponent = MeshComp;
-
 }
 
 
@@ -38,5 +37,28 @@ void FBuildPreviewSystem::UpdatePreviewTransform(const FTransform& InTransform)
 
 void FBuildPreviewSystem::StopPreview()
 {
+    if (!Preview.IsValid()) return;
+
     Preview.Destroy();
+}
+
+void FBuildPreviewSystem::SetPreviewMaterial(UMaterialInterface* InMaterial)
+{
+    if (!Preview.IsValid() && Preview.MeshComponent.IsValid()) return;
+
+    if (InMaterial == nullptr)
+    {
+        for (int32 i = 0; i < Preview.MeshComponent.Get()->GetNumMaterials(); ++i)
+        {
+            Preview.MeshComponent.Get()->SetMaterial(i, nullptr);
+        }
+        return;
+    }
+
+    UMaterialInstanceDynamic* MaterialDunamic = UMaterialInstanceDynamic::Create(InMaterial, Preview.Actor.Get());
+	//Preview.MeshComponent.Get()->SetMaterial(0, nullptr);
+    for (int32 i = 0; i < Preview.MeshComponent.Get()->GetNumMaterials(); ++i)
+    {
+        Preview.MeshComponent.Get()->SetMaterial(i, MaterialDunamic);
+    }
 }

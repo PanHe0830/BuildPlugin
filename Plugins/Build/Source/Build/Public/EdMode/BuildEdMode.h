@@ -8,6 +8,7 @@
 #define TRANCE_DISTANCE_LENGTH 100000.0f
 
 class FBuildPreviewSystem;
+class UMaterialInterface;
 
 class FBuildEdMode : public FEdMode
 {
@@ -65,6 +66,9 @@ private:
 
 	// ‘§¿¿œµÕ≥
 	FBuildPreviewSystem* BuildPreview;
+
+    // ‘§¿¿≤ƒ÷ 
+    UMaterialInterface* PreviewMaterial;
 
 public:
 	FORCEINLINE EBuildEditMode GetCurrentMode() const { return CurrentMode; }

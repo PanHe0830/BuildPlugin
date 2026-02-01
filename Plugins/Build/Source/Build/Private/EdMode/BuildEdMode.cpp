@@ -22,11 +22,12 @@ const FEditorModeID FBuildEdMode::EM_BuildEdModeId = TEXT("EM_BuildEdMode");
 
 FBuildEdMode::FBuildEdMode()
 {
-    
+    BuildPreview = nullptr;
 }
 
 FBuildEdMode::~FBuildEdMode()
 {
+
 }
 
 void FBuildEdMode::Enter()
@@ -35,6 +36,8 @@ void FBuildEdMode::Enter()
 
     BuildTool = MakeShared<FBuildTool>();
 	BuildPreview = new FBuildPreviewSystem();
+
+    PreviewMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Build/Material/M_Preview_Failed.M_Preview_Failed"));
 
     if (!Toolkit.IsValid())
     {
@@ -100,7 +103,7 @@ bool FBuildEdMode::MouseLeave(FEditorViewportClient* ViewportClient, FViewport* 
 
 bool FBuildEdMode::MouseMove(FEditorViewportClient* ViewportClient, FViewport* Viewport, int32 x, int32 y)
 {
-    if (!BuildPreview && !BuildPreview->HasValidPreview() ) return false;
+    if (BuildPreview && !BuildPreview->HasValidPreview()) return false;
 
     if (CurrentMode != EBuildEditMode::Add)
     {
@@ -142,8 +145,11 @@ bool FBuildEdMode::MouseMove(FEditorViewportClient* ViewportClient, FViewport* V
     FPlacementResult result = BuildTool->CanPlaceActorAtLocation(World, Hit, BuildPreview->GetPreviewBounds(), Type, IgnoreActors, IgnoreComponents);
     if (!result.bCanPlace)
     {
-        // TODO 设置预览为红色
-        //UE_LOG(LogTemp, Warning, TEXT("Current PreviewAsset is blocked"));
+        BuildPreview->SetPreviewMaterial(PreviewMaterial);
+    }
+    else
+    {
+        BuildPreview->SetPreviewMaterial(nullptr);
     }
     BuildPreview->UpdatePreviewTransform(result.FinalTransform);
 
