@@ -249,10 +249,6 @@ void FBuildEdMode::OnBuildAssetChanged(UObject* InObject)
     {
         Type = EBuildAssetType::Actor;
     }
-    else if ( Cast<UBlueprint>(InObject) )
-    {
-        Type = EBuildAssetType::BluePrint;
-    }
     else if ( Cast<UStaticMesh>(InObject) )
     {
         Type = EBuildAssetType::StaticMesh;

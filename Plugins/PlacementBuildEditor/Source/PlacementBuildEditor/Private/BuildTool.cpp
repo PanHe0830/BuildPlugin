@@ -47,7 +47,46 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitRes
 
 	if (type == EBuildAssetType::Actor)
 	{
-		DrawDebugBox(ViewPortClientWorld, HitResult.Location, FVector(50), FColor::Green, false, 2.0f);
+		AActor* Actor = Cast<AActor>(BuildAsset);
+		const UPrimitiveComponent* PrimComp = Cast<UPrimitiveComponent>(Actor->GetRootComponent());
+		if (!PrimComp)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation Actor has no valid root component"));
+			return;
+		}
+
+		FPlacementResult Result = CanPlaceActorAtLocation(ViewPortClientWorld, HitResult, PrimComp->Bounds, type, IgnoreActors, IgnoreStaticMeshComponent);
+
+		if (!Result.bCanPlace)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation Cannot place actor: %s"), *Result.FailMessage);
+			return;
+		}
+
+		const FScopedTransaction Transaction(
+			NSLOCTEXT("BuildTool", "CreateActor", "Create Actor")
+		);
+
+		FActorSpawnParameters SpawnParams;
+		SpawnParams.SpawnCollisionHandlingOverride =
+			ESpawnActorCollisionHandlingMethod::DontSpawnIfColliding;
+
+		AActor* MeshActor =
+			ViewPortClientWorld->SpawnActor<AActor>(
+				Actor->GetClass(),
+				Result.FinalTransform.GetLocation(),
+				FRotator::ZeroRotator,
+				SpawnParams
+			);
+
+		if (!MeshActor)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Failed to spawn AActor"));
+			return;
+		}
+
+		MeshActor->SetFlags(RF_Transactional);
+		MeshActor->Modify();
 	}
 	else if (type == EBuildAssetType::StaticMesh)
 	{
@@ -90,10 +129,6 @@ void FBuildTool::CreateMeshAtLocation(UWorld* ViewPortClientWorld, const FHitRes
 			MeshComp->SetStaticMesh(ProduceStaticMesh);
 			MeshComp->SetMobility(EComponentMobility::Movable);
 		}
-	}
-	else if (type == EBuildAssetType::BluePrint)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("FBuildTool::CreateMeshAtLocation EBuildAssetType::BluePrint"));
 	}
 	else
 	{

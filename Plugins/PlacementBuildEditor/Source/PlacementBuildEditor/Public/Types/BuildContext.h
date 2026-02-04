@@ -11,7 +11,6 @@ enum class EBuildAssetType : uint8
 {
     Actor,
 	StaticMesh,
-	BluePrint,
 
 	None UMETA(Hidden)
 };
