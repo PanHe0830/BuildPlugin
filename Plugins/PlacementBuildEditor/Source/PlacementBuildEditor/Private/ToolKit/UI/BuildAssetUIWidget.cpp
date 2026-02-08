@@ -112,7 +112,12 @@ bool SBuildAssetWidget::CheckAssetType(UObject* SelectObject)
         return false;
     }
 
-    return SelectObject->IsA<AActor>() && SelectObject->IsA<UStaticMesh>();
+    if (!SelectObject->IsA<AActor>() && !SelectObject->IsA<UStaticMesh>())
+    {
+		return false;
+    }
+
+    return true;
 }
 
 FString SBuildAssetWidget::GetSelectAssetPath() const
