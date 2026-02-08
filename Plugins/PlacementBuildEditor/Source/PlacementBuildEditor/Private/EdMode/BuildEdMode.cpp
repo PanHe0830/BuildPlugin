@@ -37,7 +37,11 @@ void FBuildEdMode::Enter()
     BuildTool = MakeShared<FBuildTool>();
 	BuildPreview = new FBuildPreviewSystem();
 
-    PreviewMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/Build/Material/M_Preview_Failed.M_Preview_Failed"));
+    PreviewMaterial = LoadObject<UMaterialInterface>(nullptr, TEXT("/PlacementBuildEditor/Material/M_Preview_Failed.M_Preview_Failed"));
+    if (PreviewMaterial == nullptr)
+    {
+		UE_LOG(LogTemp, Error, TEXT("FBuildEdMode::Enter: Failed to load preview material"));
+    }
 
     if (!Toolkit.IsValid())
     {

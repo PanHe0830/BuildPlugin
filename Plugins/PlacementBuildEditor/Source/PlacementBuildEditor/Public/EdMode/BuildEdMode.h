@@ -35,7 +35,7 @@ public:
     virtual void Render(const FSceneView* View, FViewport* Viewport, FPrimitiveDrawInterface* PDI) override;
 
     /** 工具模式名字 */
-    const static FText GetDisplayName() { return NSLOCTEXT("BuildEdMode", "DisplayName", "Build Mode"); }
+    const static FText GetDisplayName() { return NSLOCTEXT("BuildEdMode", "DisplayName", "PlacementMode"); }
 
     /** 工具ID */
     virtual bool UsesToolkits() const override { return true; }
