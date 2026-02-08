@@ -19,6 +19,8 @@ private:
 	TSharedRef<SWidget> CreateAssetTextWidget();
 private:
     void HandleAssetSelected(const FAssetData& AssetData);
+    void UpdateThumbnail(const FAssetData& AssetData, UObject* SelectedObject);
+    bool CheckAssetType(UObject* SelectObject);
     FString GetSelectAssetPath() const;
 	FText GetAssetText() const;
 private:

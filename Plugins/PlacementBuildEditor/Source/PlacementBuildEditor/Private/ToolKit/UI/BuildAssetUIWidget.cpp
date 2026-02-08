@@ -77,25 +77,42 @@ TSharedRef<SWidget> SBuildAssetWidget::CreateAssetTextWidget()
 void SBuildAssetWidget::HandleAssetSelected(const FAssetData& AssetData)
 {
     UObject* SelectedObject = AssetData.GetAsset();
-    if ( SelectedObject && BuildAssetChange.IsBound() )
+    UpdateThumbnail(AssetData, SelectedObject);
+
+    SelectedDisplayAsset = SelectedObject;
+
+    if (SelectedObject && BuildAssetChange.IsBound())
     {
-        if (!ThumbnailPool.IsValid())
-        {
-			ThumbnailPool = MakeShared<FAssetThumbnailPool>(32);
-        }
-		AssetThumbnail = MakeShared<FAssetThumbnail>(AssetData, 64, 64, ThumbnailPool);
-        ThumbnailBox->SetContent(AssetThumbnail->MakeThumbnailWidget());
-        SelectedDisplayAsset = SelectedObject;
         BuildAssetChange.Execute(SelectedObject);
-        // 告诉 Slate 刷新
-        //ChildSlot.GetWidget()->Invalidate(EInvalidateWidget::LayoutAndVolatility);
     }
-    else
+}
+
+void SBuildAssetWidget::UpdateThumbnail(const FAssetData& AssetData, UObject* SelectedObject)
+{
+    if (!CheckAssetType(SelectedObject))
     {
         AssetThumbnail.Reset();
-		SelectedDisplayAsset = nullptr;
-        ThumbnailBox->SetContent(SNullWidget::NullWidget);// 清空显示
+        ThumbnailBox->SetContent(SNullWidget::NullWidget);
+        return;
     }
+
+    if (!ThumbnailPool.IsValid())
+    {
+        ThumbnailPool = MakeShared<FAssetThumbnailPool>(32);
+    }
+
+    AssetThumbnail = MakeShared<FAssetThumbnail>(AssetData, 64, 64, ThumbnailPool);
+    ThumbnailBox->SetContent(AssetThumbnail->MakeThumbnailWidget());
+}
+
+bool SBuildAssetWidget::CheckAssetType(UObject* SelectObject)
+{
+    if (!SelectObject)
+    {
+        return false;
+    }
+
+    return SelectObject->IsA<AActor>() && SelectObject->IsA<UStaticMesh>();
 }
 
 FString SBuildAssetWidget::GetSelectAssetPath() const
