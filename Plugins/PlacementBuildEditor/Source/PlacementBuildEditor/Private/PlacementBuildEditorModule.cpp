@@ -1,3 +1,5 @@
+// Copyright (c) 2026 PH
+
 #include "PlacementBuildEditorModule.h"
 #include "EdMode/BuildEdMode.h"
 #include "EditorModeRegistry.h"

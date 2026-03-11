@@ -1,3 +1,5 @@
+// Copyright (c) 2026 PH
+
 #pragma once
 
 #include "CoreMinimal.h"        // 包含 FVector, FRotator 等基础类型

@@ -1,3 +1,5 @@
+// Copyright (c) 2026 PH
+
 #include "BuildModeUIWidget.h"
 
 #include "Widgets/Input/SButton.h"

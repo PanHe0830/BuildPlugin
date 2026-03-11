@@ -1,3 +1,5 @@
+// Copyright (c) 2026 PH
+
 #include "BuildPreviewSystem.h"
 
 void FBuildPreviewSystem::StartPreview(UWorld* ViewPortClientWorld , UStaticMesh* InMesh)

@@ -1,4 +1,6 @@
-﻿#include "BuildTool.h"
+﻿// Copyright (c) 2026 PH
+
+#include "BuildTool.h"
 
 #include "DrawDebugHelpers.h"
 #include "Engine/StaticMeshActor.h"

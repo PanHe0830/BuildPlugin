@@ -1,4 +1,6 @@
-﻿#pragma once
+﻿// Copyright (c) 2026 PH
+
+#pragma once
 
 #include "CoreMinimal.h"
 #include "Types/BuildContext.h"

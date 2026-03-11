@@ -1,3 +1,5 @@
+// Copyright (c) 2026 PH
+
 #include "BuildToolkitWidget.h"
 #include "UI/BuildAssetUIWidget.h"
 #include "UI/BuildModeUIWidget.h"

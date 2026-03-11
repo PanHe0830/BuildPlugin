@@ -1,4 +1,6 @@
-﻿#include "EdMode/BuildEdMode.h"
+﻿// Copyright (c) 2026 PH
+
+#include "EdMode/BuildEdMode.h"
 #include "ToolKit/BuildEdModeToolKit.h"
 #include "PlacementBuildEditor/Private/BuildPreviewSystem.h"
 #include "BuildTool.h"

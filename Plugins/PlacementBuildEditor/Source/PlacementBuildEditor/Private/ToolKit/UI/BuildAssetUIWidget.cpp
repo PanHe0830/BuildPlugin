@@ -1,3 +1,5 @@
+// Copyright (c) 2026 PH
+
 #include "BuildAssetUIWidget.h"
 
 #include "PropertyCustomizationHelpers.h"
