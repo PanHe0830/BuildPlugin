@@ -1,3 +1,3 @@
-[Uploading 1.完成创建插件
-2.完成创建插件界面
-3.完成点击鼠标左键在编辑器模式下放置静态网格体(Cube)README…]()
+In the Unreal Engine editor, switch to PlaceEditorMode. In the left panel, select the object you want to place. You can then click in the viewport to place the object in the scene.
+
+Use the Add and Delete options located in the upper-left corner to choose between adding new objects or removing existing ones.
